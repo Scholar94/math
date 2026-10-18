@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b52">
+  <meta name="description" content="Learn Mathematics step by step with clear video lessons, worked examples, and practice questions.">
+  <title>Scholar's Camp Mathematics Academy</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Scholar's Camp Maths">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="announcement">Free sample lessons available — start learning today.</div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Scholar's Camp Mathematics Academy home">
+      <span class="brand-mark">∑</span>
+      <span><strong>Scholar's Camp</strong><small>Mathematics Academy</small></span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <nav id="mainNav">
+      <a href="#samples">Free lessons</a>
+      <a href="#courses">Courses</a>
+      <a href="#how">How it works</a>
+      <a href="#contact">Contact</a>
+      <button class="install-nav-button" id="installAppBtn" type="button" hidden>Install app</button>
+      <a class="nav-cta" href="#courses">Explore courses</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <span class="eyebrow">MATHEMATICS, MADE CLEAR</span>
+        <h1>Understand the method.<br><span>Master the maths.</span></h1>
+        <p>Learn at your own pace with friendly video explanations, worked examples, and practice questions designed to make Mathematics easier to understand.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#samples">Watch free lessons <span>→</span></a>
+          <a class="button button-light" href="#courses">Browse courses</a>
+        </div>
+        <div class="trust-row"><span>✓ Learn at your pace</span><span>✓ Clear worked examples</span><span>✓ Phone-friendly</span></div>
+      </div>
+      <div class="hero-visual" aria-label="Mathematics learning illustration">
+        <div class="formula-card formula-one"><span class="formula-label">INDICES</span><strong>aᵐ × aⁿ = aᵐ⁺ⁿ</strong><small>Same base? Add the powers.</small></div>
+        <div class="formula-card formula-two"><span class="formula-label">ALGEBRA</span><strong>2x + 5 = 13</strong><small>Find x, step by step.</small></div>
+        <div class="formula-orbit">∑</div>
+        <div class="formula-card formula-three"><span class="formula-label">LOGARITHMS</span><strong>logₐ x = y</strong><small>Think in reverse powers.</small></div>
+      </div>
+    </section>
+
+    <section class="section samples-section" id="samples">
+      <div class="section-heading">
+        <div><span class="eyebrow">START FOR FREE</span><h2>Watch a sample lesson</h2></div>
+        <p>Try a short explanation first. When you are ready, explore the complete topic lessons.</p>
+      </div>
+      <div class="sample-grid" id="sampleGrid">
+        <!-- Sample cards are rendered from app.js. Replace the example video IDs with your own public sample videos. -->
+      </div>
+      <p class="small-note">Public sample videos are free to watch. Add your YouTube sample video IDs in the admin dashboard.</p>
+    </section>
+
+    <section class="section courses-section" id="courses">
+      <div class="section-heading">
+        <div><span class="eyebrow">LEARN BY TOPIC</span><h2>Choose your next topic</h2></div>
+        <p>Start with one topic or choose a bundle. Choose a published course, see its current price, and message us to enrol.</p>
+      </div>
+      <div class="course-grid" id="courseGrid"></div>
+      <div class="course-note"><span class="note-icon">✦</span><div><strong>Not sure which course to choose?</strong><p>Message us on WhatsApp with your class and the topic you find difficult. We will help you choose from the available lessons.</p></div><a id="courseHelpLink" class="text-link" href="#contact">Get help →</a></div>
+    </section>
+
+    <section class="how-section" id="how">
+      <div class="section section-heading how-heading">
+        <div><span class="eyebrow">SIMPLE AND CONVENIENT</span><h2>How learning works</h2></div>
+        <p>A simple process from choosing a lesson to starting your study.</p>
+      </div>
+      <div class="steps">
+        <article class="step"><span class="step-number">01</span><div class="step-icon">⌕</div><h3>Choose a topic</h3><p>Browse the course list and read what each lesson covers.</p></article>
+        <article class="step"><span class="step-number">02</span><div class="step-icon">₦</div><h3>Make payment</h3><p>Request the current payment details and follow the instructions provided.</p></article>
+        <article class="step"><span class="step-number">03</span><div class="step-icon">▶</div><h3>Get your lesson</h3><p>After payment is confirmed, receive access instructions for the course you purchased.</p></article>
+        <article class="step"><span class="step-number">04</span><div class="step-icon">✓</div><h3>Practise and improve</h3><p>Study the lesson, attempt the questions, and contact us if you need help.</p></article>
+      </div>
+    </section>
+
+    <section class="cta-section" id="contact">
+      <div class="cta-copy"><span class="eyebrow">LET'S GET STARTED</span><h2>Your next Mathematics breakthrough can start today.</h2><p>Tell us your class level and the topic you want to learn. We will guide you to the right available lesson.</p></div>
+      <div class="cta-actions"><a id="whatsappMain" class="button button-white" href="#" target="_blank" rel="noopener">Chat on WhatsApp ↗</a><a class="cta-email" href="mailto:">Email contact can be added in app.js</a></div>
+    </section>
+
+    <section class="install-section" id="installHelp">
+      <div class="install-copy">
+        <span class="eyebrow">LEARN ON YOUR DEVICE</span>
+        <h2>Install the academy on your phone or computer.</h2>
+        <p>Add this app to your home screen for quick access. The course catalogue needs an internet connection; the app shell can open again after your first visit.</p>
+      </div>
+      <div class="install-actions">
+        <button class="button button-primary" id="installMainBtn" type="button">Install app</button>
+        <button class="button button-light" id="showInstallSteps" type="button">How to install</button>
+      </div>
+      <div class="install-steps" id="installSteps" hidden>
+        <div><strong>Android / Chrome</strong><p>Open this website in Chrome, tap the browser menu (⋮), then choose <b>Install app</b> or <b>Add to Home screen</b>.</p></div>
+        <div><strong>iPhone / iPad</strong><p>Open this website in Safari, tap <b>Share</b>, then choose <b>Add to Home Screen</b>.</p></div>
+        <div><strong>Windows / Mac / Chromebook</strong><p>Open the site in a supported browser. Use the install icon in the address bar or the browser menu and choose <b>Install</b> or <b>Create shortcut</b>.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand footer-brand" href="#home"><span class="brand-mark">∑</span><span><strong>Scholar's Camp</strong><small>Mathematics Academy</small></span></a>
+    <p>Clear explanations. Confident learners.</p>
+    <div class="footer-links"><a href="#samples">Free lessons</a><a href="#courses">Courses</a><a href="#contact">Contact</a></div>
+    <small>© <span id="year"></span> Scholar's Camp Mathematics Academy. Course access is subject to the terms provided at purchase.</small>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+  <script src="pwa.js"></script>
+</body>
+</html>
