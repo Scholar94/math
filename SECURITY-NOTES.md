@@ -1,13 +1,12 @@
-# Security notes — free learner portal upgrade
+# Security notes
 
-This is an MVP using Google Apps Script, Google Sheets and Google Drive at no added software cost.
-
-- Learner accounts can register and sign in at the Apps Script URL ending in `?page=learn`.
-- Only active rows in the private `Enrollments` sheet unlock a course inside the portal.
-- Enrolment does not automatically grant Google Drive permission. After payment is verified, the operator must share the Drive file as Restricted with the exact learner email and disable viewer downloads where supported.
-- Revoke app enrolment in the Enrollments sheet AND remove that learner's Drive file permission.
-- Do not put paid Drive URLs in public course records, public JavaScript, or public web pages.
-- This is not DRM and cannot prevent every screen capture, recording, redistribution, or access through Google Drive by a user who was granted file permission.
-- The app uses salted SHA-256 for learner password storage. This is a basic no-cost MVP, not a substitute for a mature identity provider with memory-hard password hashing, abuse protection, recovery, and monitoring. Do not reuse important passwords.
-- Apps Script cache sessions can expire early. Google quotas, account policies, and deployment permissions apply.
-- The backend must be deployed and tested in the owner's Google account. Static code checks cannot confirm the live spreadsheet, permissions, deployment, or account configuration.
+- Never make the Google Sheet public.
+- Public catalogue output must not include paid Drive IDs/URLs, learner emails, order records, question answer keys or session tokens.
+- Admin operations require a valid expiring server-side admin session. Learner APIs require a learner session and an active account. Course lesson/quiz endpoints check active enrolment server-side.
+- Public registration is not the same as course access. Only grant enrolment after independently verifying payment.
+- Google Drive permissions are separate from enrolment records. Keep paid files Restricted, share only with the learner's account, and remove Drive permission when revoking access.
+- Download restrictions are best-effort friction, not DRM. Screen recording and copying cannot be completely prevented.
+- The current learner password hash uses a salted SHA-256 construction. This is a small free MVP, not a substitute for a dedicated identity provider or a modern password-hashing service; use strong unique passwords and do not reuse an admin password.
+- Add rate limiting and abuse monitoring before significant public traffic. Apps Script/Sheets are quota-limited and not designed as a high-scale authentication system.
+- AuditLog stores selected admin actions, enrolment grants/revocations and quiz submissions. It is an operational log, not tamper-proof evidence.
+- Never store bank card details, full bank credentials or plaintext passwords in Sheets.

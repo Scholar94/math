@@ -1,135 +1,155 @@
-# Scholar's Camp Mathematics Academy — Admin Dashboard Starter
+# Scholar's Camp Mathematics Academy — Free Learning Platform Upgrade
 
-This version includes a responsive public course website and a private admin dashboard served by Google Apps Script.
+This package upgrades the existing academy while keeping to the user's no-additional-paid-services requirement. It uses Google Sheets, Google Apps Script, Google Drive, public YouTube samples and the existing static PWA website. No paid API or payment gateway is required.
 
-## What it can do
-- Public homepage with short sample videos.
-- Public catalogue loads published course records from Google Sheets.
-- Admin password is configured server-side; the password is not embedded in public website JavaScript.
-- Admin can create, edit, publish/unpublish, and delete courses.
-- Set course title, category, class level, description and price in naira.
-- Add a public YouTube sample video ID to show a sample on the home page.
-- Store a Google Drive file ID or URL as a course resource reference.
-- Maintain a manual order register with payment and delivery statuses.
-- Free static hosting can be done with GitHub Pages.
-- Google Sheets stores structured records; Google Drive stores videos and learning files.
+## Included capabilities
 
-## Free / no-card approach
-Use a normal Google account, Google Sheets, Google Apps Script, Google Drive, YouTube and GitHub Pages. These have free options and do not normally require a credit card for this setup, but free quotas and account/region availability apply. This project contains no paid API and does not require a payment gateway to launch. Manual bank transfer may still be subject to your bank's normal charges.
+- Public course catalogue and public YouTube sample videos.
+- Admin login, course creation/editing/publishing, learner list, enable/disable accounts, grant/revoke enrolments, manual order recording and order status updates.
+- Academy overview: learner/course/lesson/enrolment/order counts, pending and verified orders, manually verified revenue and quiz attempts.
+- Lesson management form: course, lesson order, title, description, Drive file ID/URL, duration and publication toggle.
+- Multiple-choice question authoring, four options, answer key and explanation.
+- Learner registration/login, enrolled course list, lesson playback, mark-complete controls, progress summary and quiz scoring/history.
+- PWA manifest, icons, service worker and installation instructions.
+- Audit log for selected administrative and learning actions.
 
-## A. Set up the Google backend
+## Free-service caveats
 
-1. Create a Google Sheet named `Scholar's Camp Academy Data`.
-2. In the sheet, open **Extensions → Apps Script**.
-3. Replace the default `Code.gs` with the contents of `apps-script/Code.gs`.
-4. Click **+** next to Files, select **HTML**, and name the file exactly `Admin`. Paste the contents of `apps-script/Admin.html`.
-5. Save the project.
-6. In the function dropdown, select `setupAcademy` and click Run. Grant the requested permissions. This creates Courses, Orders, Leads and Settings tabs and adds three editable starter courses.
-7. Select `setAdminPassword` and click Run. Follow the prompt. Use a strong password of at least 12 characters. The server stores a SHA-256 hash, not the plain password. Do not share the password.
-8. Select **Deploy → New deployment → Web app**.
-   - Execute as: **Me**
-   - Who has access: **Anyone** (the public catalogue and admin page need to load from your website; admin changes still require the server-side password/session token).
-9. Deploy, complete any authorisation steps, and copy the Web App URL. It will look similar to `https://script.google.com/macros/s/.../exec`.
-10. Test the URL by opening it. It should show the backend page. Add `?page=admin` to open the dashboard. Log in with your admin password.
+All components use services with free options. Google quotas, account restrictions and service availability apply. No third-party paid service is introduced. Bank transfer verification remains manual. This is not DRM: learners who can view a video may still copy it or record their screen. Restricted Drive sharing and disabled download controls reduce casual copying but do not guarantee app-only playback.
 
-If the account does not offer "Anyone" access, the public website cannot load the catalogue through this endpoint. Do not make your Sheet public as a workaround.
+## 1. Back up first
 
-## B. Connect your public website
+1. Make a copy of the existing Google Sheet.
+2. In Apps Script, copy the current project or save its current `Code.gs`, `Admin.html` and `Learner.html` contents separately.
+3. Keep the current website ZIP until the new version has passed your own tests.
 
-1. Open `app.js`.
-2. Set `whatsappNumber` to your number in international digits only (Nigeria example format: `2348012345678`).
-3. Set `appsScriptUrl` to the deployed Web App URL from step A.
-4. Save.
-5. Replace the three fallback sample `youtubeId` values with your own public sample video IDs if you want them to show when the backend is not configured.
-6. Upload `index.html`, `styles.css` and `app.js` to a GitHub repository.
-7. In GitHub repository **Settings → Pages**, publish from the main branch/root folder. Use the URL GitHub Pages provides.
+## 2. Install the Apps Script files
 
-Public catalogue items come from the `Courses` sheet after the Apps Script URL is connected. Only courses marked Published appear. Courses added or priced in the admin dashboard are reflected when the public page reloads.
+1. Open the Google Sheet used by the academy.
+2. Open **Extensions → Apps Script**.
+3. Replace `Code.gs` with `apps-script/Code.gs` from this package.
+4. Open the existing HTML file named `Admin` and replace its contents with `apps-script/Admin.html`.
+5. Open the HTML file named `Learner` and replace its contents with `apps-script/Learner.html`. If it does not exist, click **+ → HTML**, name it `Learner`, then paste the contents.
+6. Save the project.
+7. Select `setupAcademy` and click Run. Authorize requested permissions. The setup creates missing tabs while preserving existing tabs with data.
+8. Check that the following tabs exist: `Courses`, `Orders`, `Leads`, `Settings`, `Learners`, `Enrollments`, `Lessons`, `Questions`, `Progress`, `QuizAttempts`, `AuditLog`.
 
-## C. Create and price courses
+The existing `Courses`, `Orders`, `Learners` and `Enrollments` tabs must retain their expected column layouts. Do not rename or reorder columns without updating the code.
 
-1. Open your deployed Apps Script URL followed by `?page=admin`.
-2. Sign in with the password set in step A.
-3. Select **New course**.
-4. Enter the title, price, category, level and description.
-5. Optional: add an 11-character YouTube video ID for a public sample; add a Drive file ID/URL as a reference for paid materials.
-6. Tick **Publish this course on the public website** to make it visible.
-7. Click **Save course**. Edit or unpublish it whenever you wish.
+## 3. Set the admin password
 
-## D. Video access and payment limitations — read this
+1. Open Apps Script **Project Settings**.
+2. Under Script properties, add `ADMIN_PASSWORD_SETUP` with a strong password of at least 12 characters.
+3. Save the property.
+4. Return to the editor, select `setAdminPassword` and click Run.
+5. Confirm the execution completes. The function stores the SHA-256 hash and deletes the temporary plain-text property.
 
-- Short sample videos are public on the homepage by design.
-- The admin stores a Drive file reference, but a Drive URL is not secure paid-course delivery by itself. Do not set paid files to "Anyone with the link" if you intend to restrict them.
-- This version does not automatically confirm bank transfers or automatically unlock course videos after purchase. Verify the actual bank/provider transaction record, then share the specific course file with the purchaser or send the approved course access instructions manually.
-- Never rely only on payment screenshots.
-- The admin order register is for manual records; setting an order to "Paid - verified" is an action you perform after checking payment, not an automatic verification.
-- Do not put passwords, secret API keys or payment credentials in `app.js`.
-- Do not share the Google Sheet itself publicly. Only the Apps Script web app endpoint is public; privileged write functions require a valid expiring server-side session.
-- This is a useful free MVP, not a DRM platform. Recipients can copy/share content they are allowed to view.
+Never put a password or token in the public `app.js` file or in the spreadsheet.
 
-## E. Test checklist
+## 4. Deploy or update the web app
 
-1. Run `setupAcademy()`; confirm four tabs are created.
-2. Run `setAdminPassword()`; configure a strong password.
-3. Deploy web app; confirm `?page=admin` opens.
-4. Sign in; create a draft course; verify it is in the dashboard but not on public website.
-5. Publish the course; verify it appears on the public site after refresh.
-6. Change the price; verify the new price appears publicly.
-7. Unpublish; verify it disappears from public catalogue.
-8. Try a malformed YouTube ID; the server should reject it.
-9. Add a test order; verify it appears in the order register.
-10. Sign out and sign in again; verify the dashboard requires a password.
-11. Verify the spreadsheet is private and no password or token is present in `app.js`.
-12. Test the public homepage on a phone and desktop.
+1. Click **Deploy → Manage deployments**.
+2. Edit the existing web app deployment or create a new deployment, choose **Web app**, and select a new version.
+3. Set **Execute as** to **Me**.
+4. Public catalogue and learner registration require the web app to be reachable by intended users. Select `Anyone` only if your Google account offers it and you accept the exposure of the public endpoints. Admin mutations require the server-side admin session.
+5. Deploy and copy the URL ending in `/exec`.
+6. Admin URL: `YOUR_WEB_APP_URL?page=admin`
+7. Learner URL: `YOUR_WEB_APP_URL?page=learn`
+8. Public catalogue endpoint: `YOUR_WEB_APP_URL?action=catalog`
 
-The automated static checks run before delivery cover JavaScript syntax, HTML structure and key integration/security patterns. Live Google authorisation/deployment cannot be completed or honestly claimed from this environment; perform the deployment checklist above with your own Google account.
+Do not make the Google Sheet public. If Google policy/account settings do not allow the necessary web-app access, do not make the spreadsheet public as a workaround.
 
+## 5. Connect the public website
 
-## F. Install it like an app on phones, tablets and computers
+1. Open `app.js` and find `SITE_CONFIG`.
+2. Set `appsScriptUrl` to the deployed URL ending in `/exec`.
+3. Set `whatsappNumber` to the academy's business number in international digits only, for example `2348012345678`.
+4. Preserve all other config values and save.
+5. Upload all website files, including `index.html`, `styles.css`, `app.js`, `manifest.webmanifest`, `pwa.js`, `service-worker.js` and `icons/`, to a static HTTPS host whose current terms permit a commercial course website. Check the host's terms before launch; do not assume every free static host permits commercial transactions.
+6. Open the HTTPS website on a phone and computer and test it.
 
-This project is a **Progressive Web App (PWA)**. It is installable from the published HTTPS website without an app store or paid developer account.
+## 6. Publish a course
 
-The root of the site must include:
-- `manifest.webmanifest`
-- `service-worker.js`
-- `pwa.js`
-- the `icons/` folder
+1. Sign in at `YOUR_WEB_APP_URL?page=admin`.
+2. Use **New course** or edit a course.
+3. Fill in title, category, class level, description and price in naira.
+4. Add a public YouTube sample ID only for content you want everyone to watch. The ID is normally the 11-character value after `v=` in a YouTube URL.
+5. Tick the publish checkbox and save.
+6. Confirm the course appears on the public catalogue. Publishing a course does not grant access to paid lessons.
 
-Upload all these files alongside `index.html`, `styles.css` and `app.js` to the same GitHub Pages site.
+## 7. Add lessons
 
-### Android
-Open the HTTPS website in Chrome. Use the in-page **Install app** button when Chrome offers it, or Chrome menu → **Install app** / **Add to Home screen**.
+1. In the admin dashboard, open **Lessons and practice questions → Add a lesson**.
+2. Select the course, assign an order number, enter a title and description, and enter the Drive file ID or Drive URL.
+3. Tick **Publish this lesson to enrolled learners** and submit.
+4. For a Drive URL such as `https://drive.google.com/file/d/FILE_ID/view`, the file ID is the value between `/d/` and `/view`.
+5. In Drive, keep the paid file **Restricted**. After payment is verified and enrolment is granted, share the file as Viewer with the learner's registered Google email. Disable download/print/copy where Drive offers the option.
 
-### iPhone and iPad
-Open the HTTPS website in Safari → Share → **Add to Home Screen**. iOS does not always show a browser install prompt, so use these manual steps.
+Lessons are currently added from the admin form; lesson editing/deletion is not yet included in the interface. To correct an existing lesson, update its row carefully in the private `Lessons` tab and preserve the column order. Avoid deleting rows that are referenced in `Progress`.
 
-### Windows, macOS and Chromebook
-Open the HTTPS site in a supported browser such as Chrome or Edge. Choose the install icon in the address bar or browser menu → **Install app** / **Create shortcut**.
+## 8. Add practice questions
 
-### What works offline?
-After the first successful visit, the app shell (basic page, styling, icons and scripts) is cached so the interface can reopen offline. The live Google Sheets catalogue, YouTube video playback and Google Drive content require an internet connection. This is not the same as downloading every course video to the device.
+1. Open **Lessons and practice questions → Add a multiple-choice question**.
+2. Choose the course and a topic, e.g. `Laws of Indices`.
+3. Enter the question and all four options.
+4. Choose the correct option and write an explanation learners will see after submitting.
+5. Tick publish and submit.
+6. Repeat for the topic. Questions with the same topic label can be organized together in the private `Questions` sheet.
 
-### Native APK / App Store
-This is not a signed Android APK or an App Store package. It is a cross-device installable web app, which avoids paid store accounts and keeps the launch free. If a standalone APK or native iOS app is required later, that is a separate build and signing process.
+The learner quiz is automatically scored on the server. Do not place correct answers in the public course data. Do not use this starter as a high-stakes proctored examination system.
 
+## 9. Register learners and grant course access
 
-## Free learner portal and manual enrolment (added)
+1. Give the learner the learner URL: `YOUR_WEB_APP_URL?page=learn`.
+2. The learner creates an account using a valid email and password of at least 12 characters.
+3. Verify payment from the actual bank/provider record, not a screenshot alone.
+4. In Admin → Learners and course access, select the registered learner, choose the course, add a payment reference/note and click **Grant course access**.
+5. Separately share the paid Drive file with the learner's registered Google account as Viewer while keeping General access Restricted.
+6. Ask the learner to sign in again and open the course.
 
-The updated Apps Script includes a learner portal at the deployed web-app URL ending in `?page=learn`. Learners can create an account and sign in. The portal shows only courses with an `Active` row for their email in the `Enrollments` sheet. Registration and the basic portal use Google Apps Script and Google Sheets; no paid service is added.
+Granting enrolment authorizes access in the app; it does not automatically change Drive sharing permissions. When revoking, revoke the app enrolment and also remove the learner's Drive permission.
 
-### First-time setup after replacing Code.gs
-1. In Apps Script, create an HTML file named exactly `Learner` and paste the contents of `apps-script/Learner.html`. Keep the existing `Admin.html`.
-2. Run `setupAcademy()` again. It creates the `Learners` and `Enrollments` tabs if missing and preserves existing tabs/records.
-3. In Project Settings → Script properties, add `ADMIN_PASSWORD_SETUP` with a strong password of at least 12 characters. Run `setAdminPassword()` once. The function hashes the password and removes the temporary property.
-4. Deploy/update the Web App (execute as Me). The learner URL is `YOUR_WEB_APP_URL?page=learn`; the admin URL remains `YOUR_WEB_APP_URL?page=admin`.
-5. Learners register at `?page=learn`. Registration does not grant course access.
+## 10. Record and update orders
 
-### Grant access after payment (manual and free)
-1. Verify the payment in your bank/payment account first.
-2. Ask the learner to register using the email they will use for the course.
-3. In the private Google Sheet, open `Enrollments` and add a row: `Enrollment ID` (any unique ID), `Learner Email` (exact registered email), `Course ID` (copy from Courses column A), `Status` (`Active`), `Granted At` (date/time), `Expires At` (leave blank for no expiry), `Notes` (optional).
-4. In Google Drive, open the paid video file → Share → set General access to `Restricted`; share only with the learner's registered email as Viewer. In sharing settings, disable viewer download/print/copy where the option is available.
-5. The learner signs in again or refreshes their portal to see the course. Revoke access in the app by changing the enrolment Status to `Revoked`, and separately remove the learner's Drive sharing permission.
+1. Use the Order register to create an order record.
+2. Confirm the payment independently.
+3. Use **Update an existing order** with the exact order reference to set `Paid - verified`, `Delivered`, `Pending`, `Refunded`, `Cancelled` or `Access issue` as appropriate.
+4. Grant enrolment only after verifying the payment.
 
-### Honest security limitations
-This is a no-cost access-control improvement, not DRM. Google Drive is not a true app-only video streaming host. A learner with Drive permission may still open the video in Drive, and no browser solution can prevent every screen recording or external camera recording. Disable download where supported and share only with intended users. Do not publish paid Drive URLs in the public catalogue. The learner portal's password hash is salted SHA-256, but this is not a replacement for a professional identity provider with modern password-hardening; use this as a small-scale MVP and avoid reusing passwords. Google Apps Script/Sheets quotas and account policies apply.
+There is no automatic bank transaction verification, payment gateway, automatic receipt, or automatic Drive sharing in this version. Verified revenue in the overview is calculated from rows whose payment status includes `Paid` and `verified`.
+
+## 11. Learner experience
+
+Learners can register, sign in, view courses they are actively enrolled in, play published lesson videos, mark lessons complete, view lesson progress and attempt published multiple-choice quizzes. Quiz results and recent attempts are stored in the private `QuizAttempts` sheet.
+
+Lesson completion is learner-marked; it does not prove that the video was watched to the end. The current system does not provide streaming DRM, guaranteed anti-screen-recording, native app-store packages, or a secure video CDN.
+
+## 12. Backup and maintenance
+
+- Make a dated copy of the Google Sheet before major changes and on a regular schedule.
+- Periodically download an offline copy of important lesson source videos and notes that you own.
+- Check Apps Script **Executions** after errors.
+- Review account registrations and remove access that is no longer needed.
+- Keep the spreadsheet private and protect administrator account access.
+- Keep course and quiz content reasonable in size; Sheets and Apps Script have quotas and are not intended for unlimited traffic.
+
+## 13. Launch checklist
+
+- [ ] Setup creates all 11 tabs without clearing existing records.
+- [ ] `setAdminPassword` succeeds and old `getUi()` calls are absent from the password setup path.
+- [ ] Admin login works and an unauthenticated user cannot call admin mutations.
+- [ ] Public catalogue exposes only published public fields, not paid Drive URLs.
+- [ ] Course creation, edit, publish and unpublish work.
+- [ ] Learner registration, login and disabled-account checks work.
+- [ ] An un-enrolled learner cannot call lesson or quiz APIs for a paid course.
+- [ ] Grant/revoke enrolment works; Drive permissions are checked separately.
+- [ ] Lesson completion updates progress.
+- [ ] Quiz submission is scored on the server and records an attempt.
+- [ ] Order status changes and dashboard analytics work.
+- [ ] Free sample videos remain public.
+- [ ] Spreadsheet is private; no secrets are in website JavaScript.
+- [ ] PWA installation and mobile layout are tested on real devices.
+
+## Verification status
+
+Local static checks can validate archive integrity, JavaScript syntax and file presence. Live Google authorization, deployment permissions, actual Drive access and installation on real devices must be tested in the owner's Google account; this package does not claim those live tests have already passed.

@@ -4,10 +4,10 @@
 */
 const SITE_CONFIG = {
   brand: "Scholar's Camp Mathematics Academy",
-  whatsappNumber: "2348082320147", // International digits only, e.g. 2348012345678
-  contactEmail: "scholarscamp2@gmail.com",
+  whatsappNumber: "", // International digits only, e.g. 2348012345678
+  contactEmail: "",
   currency: "₦",
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzqYGJxURIQRecKYixd6aPRZYuOFW-qTidDnv4y18Fj5VictaOvHHz_vN_S8qAsoXwVVw/exec" // Deployed Google Apps Script Web App URL
+  appsScriptUrl: "" // Deployed Google Apps Script Web App URL
 };
 
 const FALLBACK_SAMPLES = [
