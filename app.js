@@ -4,7 +4,7 @@
 */
 const SITE_CONFIG = {
   brand: "Scholar's Camp Mathematics Academy",
-  whatsappNumber: "23482320147", // International digits only, e.g. 2348012345678
+  whatsappNumber: "2348082320147", // International digits only, e.g. 2348012345678
   contactEmail: "scholarscamp2@gmail.com",
   currency: "₦",
   appsScriptUrl: "https://script.google.com/macros/s/AKfycbzqYGJxURIQRecKYixd6aPRZYuOFW-qTidDnv4y18Fj5VictaOvHHz_vN_S8qAsoXwVVw/exec" // Deployed Google Apps Script Web App URL
