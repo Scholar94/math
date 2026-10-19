@@ -111,3 +111,25 @@ After the first successful visit, the app shell (basic page, styling, icons and 
 
 ### Native APK / App Store
 This is not a signed Android APK or an App Store package. It is a cross-device installable web app, which avoids paid store accounts and keeps the launch free. If a standalone APK or native iOS app is required later, that is a separate build and signing process.
+
+
+## Free learner portal and manual enrolment (added)
+
+The updated Apps Script includes a learner portal at the deployed web-app URL ending in `?page=learn`. Learners can create an account and sign in. The portal shows only courses with an `Active` row for their email in the `Enrollments` sheet. Registration and the basic portal use Google Apps Script and Google Sheets; no paid service is added.
+
+### First-time setup after replacing Code.gs
+1. In Apps Script, create an HTML file named exactly `Learner` and paste the contents of `apps-script/Learner.html`. Keep the existing `Admin.html`.
+2. Run `setupAcademy()` again. It creates the `Learners` and `Enrollments` tabs if missing and preserves existing tabs/records.
+3. In Project Settings → Script properties, add `ADMIN_PASSWORD_SETUP` with a strong password of at least 12 characters. Run `setAdminPassword()` once. The function hashes the password and removes the temporary property.
+4. Deploy/update the Web App (execute as Me). The learner URL is `YOUR_WEB_APP_URL?page=learn`; the admin URL remains `YOUR_WEB_APP_URL?page=admin`.
+5. Learners register at `?page=learn`. Registration does not grant course access.
+
+### Grant access after payment (manual and free)
+1. Verify the payment in your bank/payment account first.
+2. Ask the learner to register using the email they will use for the course.
+3. In the private Google Sheet, open `Enrollments` and add a row: `Enrollment ID` (any unique ID), `Learner Email` (exact registered email), `Course ID` (copy from Courses column A), `Status` (`Active`), `Granted At` (date/time), `Expires At` (leave blank for no expiry), `Notes` (optional).
+4. In Google Drive, open the paid video file → Share → set General access to `Restricted`; share only with the learner's registered email as Viewer. In sharing settings, disable viewer download/print/copy where the option is available.
+5. The learner signs in again or refreshes their portal to see the course. Revoke access in the app by changing the enrolment Status to `Revoked`, and separately remove the learner's Drive sharing permission.
+
+### Honest security limitations
+This is a no-cost access-control improvement, not DRM. Google Drive is not a true app-only video streaming host. A learner with Drive permission may still open the video in Drive, and no browser solution can prevent every screen recording or external camera recording. Disable download where supported and share only with intended users. Do not publish paid Drive URLs in the public catalogue. The learner portal's password hash is salted SHA-256, but this is not a replacement for a professional identity provider with modern password-hardening; use this as a small-scale MVP and avoid reusing passwords. Google Apps Script/Sheets quotas and account policies apply.

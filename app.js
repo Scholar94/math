@@ -4,10 +4,10 @@
 */
 const SITE_CONFIG = {
   brand: "Scholar's Camp Mathematics Academy",
-  whatsappNumber: "2349036631218", // International digits only, e.g. 2348012345678
-  contactEmail: "scholarscamp2@gmail.com",
+  whatsappNumber: "", // International digits only, e.g. 2348012345678
+  contactEmail: "",
   currency: "₦",
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzqYGJxURIQRecKYixd6aPRZYuOFW-qTidDnv4y18Fj5VictaOvHHz_vN_S8qAsoXwVVw/exec" // Deployed Google Apps Script Web App URL
+  appsScriptUrl: "" // Deployed Google Apps Script Web App URL
 };
 
 const FALLBACK_SAMPLES = [
@@ -79,6 +79,22 @@ function renderCourses(courses) {
     openWhatsApp(`Hello! I am interested in ${course.title} (${formatMoney(course.price)}). Please send me the course details and official payment instructions.`);
   }));
 }
+
+function configureLearnerPortalLink() {
+  const nav = document.getElementById("mainNav");
+  if (!nav || !SITE_CONFIG.appsScriptUrl.trim()) return;
+  let link = document.getElementById("learnerPortalLink");
+  if (!link) {
+    link = document.createElement("a");
+    link.id = "learnerPortalLink";
+    link.textContent = "Learner sign in";
+    nav.insertBefore(link, nav.querySelector(".nav-cta") || null);
+  }
+  link.href = SITE_CONFIG.appsScriptUrl.trim() + "?page=learn";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+}
+
 function loadPublicCourses() {
   const url = SITE_CONFIG.appsScriptUrl.trim();
   if (!url) {
@@ -116,6 +132,7 @@ function loadPublicCourses() {
 function init() {
   renderSamples(FALLBACK_SAMPLES);
   renderCourses(COURSES);
+  configureLearnerPortalLink();
   loadPublicCourses();
   const year = document.getElementById("year");
   if (year) year.textContent = new Date().getFullYear();
