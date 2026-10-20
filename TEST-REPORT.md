@@ -3,7 +3,8 @@
 ## How it was tested
 - `Code.gs` was executed in Node against a simulated Apps Script runtime (Sheets, Properties, Cache, Lock, Utilities, ContentService). The simulation mimics Google Sheets auto-conversion of typed values (phone numbers, fractions, formulas).
 - `Learner.html`, `Admin.html` and `index.html` were run in real Chromium, wired to that simulated backend through a `google.script.run` shim.
-- Result: 48 backend checks, 32 admin/learner browser checks and 8 public-site/PWA checks pass.
+- The static pages were also tested cross-origin (site and API on different ports, no CORS preflight), as they will run in production.
+- Result: 48 + 25 backend checks, 32 Google-hosted page checks and 16 static-portal checks pass (registration, forgot-password, sign-in, session restore, quiz, KaTeX rendering, admin grant with Drive sharing).
 
 ## Bugs found and fixed
 | # | Where | Problem | Fix |
@@ -28,3 +29,6 @@
 
 ## Still not tested (needs your Google account)
 Live authorization and deployment, real Drive sharing, and installation on real phones. Complete the README launch checklist before accepting real payments.
+
+## Added in the upgrade pass
+Static learner portal and admin page (fetch API via `doPost`), emails, forgot-password codes, automatic Drive sharing/unsharing, KaTeX maths, weekly backup. Email delivery, real Drive permission changes and CORS behaviour of the live Google web app could only be simulated here and must be tried once with a test learner.

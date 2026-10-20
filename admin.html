@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="icon" href="icons/icon-192.png">
+  <meta charset="utf-8">
+  <title>Academy admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{--navy:#102b52;--blue:#1d65c1;--gold:#f6b83f;--ink:#17263b;--muted:#66758b;--line:#e1e8f0;--bg:#f5f8fc;--red:#b42318;--green:#16845b}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+    header{background:var(--navy);color:#fff;padding:22px max(18px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:18px}
+    header h1{font-size:1.2rem;margin:0}header p{margin:4px 0 0;color:#d1ddef;font-size:.84rem}.brand-mark{display:inline-grid;place-items:center;background:var(--gold);color:var(--navy);font-size:1.5rem;font-weight:900;width:42px;height:42px;border-radius:12px;margin-right:12px;vertical-align:middle}
+    main{max-width:1120px;margin:28px auto;padding:0 18px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:20px;box-shadow:0 6px 20px #102b5208}
+    h2{font-size:1.15rem;color:var(--navy);margin:0 0 15px}.muted{color:var(--muted);font-size:.88rem}.hidden{display:none!important}
+    label{display:block;font-weight:700;font-size:.85rem;margin:0 0 6px}input,textarea,select{width:100%;padding:11px 12px;border:1px solid #cfd9e5;border-radius:9px;font:inherit;color:var(--ink);background:#fff}textarea{min-height:90px;resize:vertical}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.field.full{grid-column:1/-1}.checkrow{display:flex;gap:10px;align-items:center}.checkrow input{width:auto}.checkrow label{margin:0}.btn{border:0;border-radius:9px;padding:11px 15px;font:inherit;font-weight:750;cursor:pointer;background:var(--blue);color:#fff}.btn.secondary{background:#eaf2ff;color:var(--navy)}.btn.danger{background:#fff0ef;color:var(--red)}.btn:disabled{opacity:.55;cursor:wait}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.status{padding:11px 13px;border-radius:9px;background:#edf4ff;color:var(--navy);margin:12px 0}.status.error{background:#fff0ef;color:var(--red)}.status.success{background:#eaf8f1;color:var(--green)}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.course-list{display:grid;gap:12px}.course-row{border:1px solid var(--line);border-radius:12px;padding:15px;display:flex;align-items:flex-start;gap:15px;justify-content:space-between}.course-row h3{margin:0 0 4px;color:var(--navy);font-size:1rem}.course-row p{margin:0 0 8px;color:var(--muted);font-size:.86rem}.course-row .row-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;min-width:155px}.pill{display:inline-block;border-radius:30px;background:#eaf8f1;color:var(--green);padding:3px 9px;font-size:.72rem;font-weight:800}.pill.off{background:#f0f2f5;color:#667085}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px;font-size:.84rem}th{background:#f5f8fc;color:var(--navy)}.small{font-size:.78rem}.login-wrap{max-width:460px;margin:45px auto}.note{border-left:4px solid var(--gold);padding:10px 13px;background:#fff8e7;color:#685221;font-size:.85rem;border-radius:0 8px 8px 0}
+    @media(max-width:650px){header{align-items:flex-start}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.course-row{display:block}.course-row .row-actions{justify-content:flex-start;margin-top:12px}.panel{padding:16px}.login-wrap{margin:22px auto}}
+  </style>
+</head>
+<body>
+<header><div><span class="brand-mark">&#x2211;</span><span style="display:inline-block;vertical-align:middle"><h1>Scholar's Camp Academy</h1><p>Private course management</p></span></div><button id="logoutBtn" class="btn secondary hidden" onclick="logout()">Sign out</button></header>
+<main>
+  <section id="loginPanel" class="panel login-wrap">
+    <h2>Administrator sign in</h2>
+    <p class="muted">Use the admin password you configured in Google Apps Script. Students do not need this dashboard.</p>
+    <form id="loginForm">
+      <div class="field"><label for="password">Admin password</label><input id="password" type="password" autocomplete="current-password" minlength="12" required></div>
+      <div class="actions"><button class="btn" id="loginBtn" type="submit">Sign in</button></div>
+    </form>
+    <div id="loginStatus" aria-live="polite"></div>
+    <p class="small muted">If this is your first time, open your Google Sheet &#x2192; Extensions &#x2192; Apps Script and run <b>setAdminPassword()</b>.</p>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="panel">
+      <div class="toolbar"><div><h2>Course manager</h2><p class="muted">Create courses, set prices, add sample videos and publish or unpublish products.</p></div><button class="btn" onclick="newCourse()">+ New course</button></div>
+      <div id="courseStatus" aria-live="polite"></div>
+      <div id="courseList" class="course-list"></div>
+    </div>
+    <div class="panel hidden" id="editorPanel">
+      <h2 id="editorTitle">Create a course</h2>
+      <form id="courseForm">
+        <input type="hidden" id="courseId">
+        <div class="form-grid">
+          <div class="field"><label for="title">Course title *</label><input id="title" maxlength="160" required></div>
+          <div class="field"><label for="price">Price in naira (&#x20A6;) *</label><input id="price" type="number" min="0" max="100000000" step="1" required></div>
+          <div class="field"><label for="category">Category / subject</label><input id="category" maxlength="100" placeholder="e.g. Algebra"></div>
+          <div class="field"><label for="level">Class level</label><input id="level" maxlength="100" placeholder="e.g. JSS2, SS1, WAEC"></div>
+          <div class="field full"><label for="description">Course description</label><textarea id="description" maxlength="1000" placeholder="Explain what the learner will study."></textarea></div>
+          <div class="field"><label for="sampleYoutubeId">Public sample YouTube video ID</label><input id="sampleYoutubeId" maxlength="30" placeholder="11-character video ID"></div>
+          <div class="field"><label for="driveFileId">Google Drive file ID (optional)</label><input id="driveFileId" maxlength="200" placeholder="ID of the paid course file"></div>
+          <div class="field full"><label for="driveUrl">Google Drive / Docs URL (optional)</label><input id="driveUrl" type="url" maxlength="1000" placeholder="https://drive.google.com/..."></div>
+          <div class="field full checkrow"><input id="published" type="checkbox" checked><label for="published">Publish this course on the public website</label></div>
+        </div>
+        <div class="note" style="margin-top:15px">Only add a sample video that you want the public to watch. A Drive link is not protected course access by itself; share paid files only with intended customers and verify payment first.</div>
+        <div class="actions"><button class="btn" id="saveBtn" type="submit">Save course</button><button class="btn secondary" type="button" onclick="closeEditor()">Cancel</button></div>
+        <div id="editorStatus" aria-live="polite"></div>
+      </form>
+    </div>
+    <div class="panel" id="analyticsPanel"><div class="toolbar"><div><h2>Academy overview</h2><p class="muted">Operational counts from your private Google Sheets records.</p></div><button class="btn secondary" onclick="loadAnalytics()">Refresh overview</button></div><div id="analyticsStatus"></div><div id="analyticsCards" class="form-grid"></div></div>
+    <div class="panel" id="contentPanel"><h2>Lessons and practice questions</h2><p class="muted">Add lesson videos and quiz questions to a course. Keep paid Drive files Restricted and share them only with enrolled learners.</p><div id="contentStatus"></div>
+      <h3 style="color:var(--navy)">Add a lesson</h3><form id="lessonForm" class="form-grid"><div class="field"><label for="lessonCourse">Course *</label><select id="lessonCourse" required></select></div><div class="field"><label for="lessonOrder">Lesson order</label><input id="lessonOrder" type="number" min="1" value="1"></div><div class="field"><label for="lessonTitle">Lesson title *</label><input id="lessonTitle" maxlength="160" required></div><div class="field"><label for="lessonDuration">Duration (minutes)</label><input id="lessonDuration" type="number" min="0" value="0"></div><div class="field full"><label for="lessonDescription">Description</label><textarea id="lessonDescription" maxlength="1000"></textarea></div><div class="field"><label for="lessonFileId">Drive file ID</label><input id="lessonFileId" maxlength="200"></div><div class="field"><label for="lessonUrl">Drive URL</label><input id="lessonUrl" type="url" maxlength="1000" placeholder="https://drive.google.com/file/d/..."></div><div class="field full checkrow"><input id="lessonPublished" type="checkbox" checked><label for="lessonPublished">Publish this lesson to enrolled learners</label></div><div class="field full"><button class="btn" type="submit">Add lesson</button></div></form>
+      <hr style="border:0;border-top:1px solid var(--line);margin:24px 0"><h3 style="color:var(--navy)">Add a multiple-choice question</h3><form id="questionForm" class="form-grid"><div class="field"><label for="questionCourse">Course *</label><select id="questionCourse" required></select></div><div class="field"><label for="questionTopic">Quiz topic</label><input id="questionTopic" maxlength="100" value="General practice"></div><div class="field full"><label for="questionText">Question * <span class="muted">(maths: write $x^2$ or $\frac{1}{2}$)</span></label><textarea id="questionText" maxlength="1500" required></textarea></div><div class="field"><label for="optionA">Option A *</label><input id="optionA" required maxlength="500"></div><div class="field"><label for="optionB">Option B *</label><input id="optionB" required maxlength="500"></div><div class="field"><label for="optionC">Option C *</label><input id="optionC" required maxlength="500"></div><div class="field"><label for="optionD">Option D *</label><input id="optionD" required maxlength="500"></div><div class="field"><label for="correctOption">Correct option *</label><select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select></div><div class="field full"><label for="questionExplanation">Explanation shown after submission</label><textarea id="questionExplanation" maxlength="1500"></textarea></div><div class="field full checkrow"><input id="questionPublished" type="checkbox" checked><label for="questionPublished">Publish this question to enrolled learners</label></div><div class="field full"><button class="btn" type="submit">Add question</button></div></form>
+      <div class="note">For each course, add lessons in order and use a consistent quiz topic if you want questions to be grouped together. Questions marked as published are available to enrolled learners.</div>
+    </div>
+    <div class="panel" id="learnerPanel">
+      <div class="toolbar"><div><h2>Learners and course access</h2><p class="muted">Review registered learners and grant or revoke course access after you have independently verified payment.</p></div><button class="btn secondary" onclick="refreshLearners()">Refresh learners</button></div>
+      <div class="note">Important: setting an enrolment to Active unlocks the course in the portal only. You must also share the paid Drive file as Restricted with the learner's registered Google email, and disable downloads where available. Never grant access based only on a payment screenshot.</div>
+      <div id="learnerStatus" aria-live="polite"></div>
+      <form id="grantForm" class="form-grid" style="margin:15px 0">
+        <div class="field"><label for="grantLearner">Registered learner *</label><select id="grantLearner" required><option value="">Load learners first</option></select></div>
+        <div class="field"><label for="grantCourse">Course *</label><select id="grantCourse" required></select></div>
+        <div class="field full"><label for="grantNotes">Notes / payment reference (optional)</label><input id="grantNotes" maxlength="300" placeholder="e.g. bank transfer verified on 19 Oct"></div>
+        <div class="field full"><button class="btn" id="grantBtn" type="submit">Grant course access</button></div>
+      </form>
+      <h3 style="color:var(--navy);margin:18px 0 8px">Registered learners</h3>
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Account status</th><th>Last login</th><th>Actions</th></tr></thead><tbody id="learnersBody"><tr><td colspan="5" class="muted">Sign in to load learners.</td></tr></tbody></table></div>
+      <h3 style="color:var(--navy);margin:22px 0 8px">Course enrolments</h3>
+      <div class="table-wrap"><table><thead><tr><th>Learner email</th><th>Course</th><th>Status</th><th>Granted</th><th>Notes</th><th>Action</th></tr></thead><tbody id="enrollmentsBody"><tr><td colspan="6" class="muted">No enrolments loaded.</td></tr></tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="toolbar"><div><h2>Order register</h2><p class="muted">Record orders and update payment/delivery status manually after checking the actual payment record.</p></div><button class="btn secondary" onclick="loadOrders()">Refresh orders</button></div>
+      <div id="orderStatus" aria-live="polite"></div>
+      <form id="orderForm" class="form-grid" style="margin:15px 0">
+        <div class="field"><label for="orderCustomer">Customer name *</label><input id="orderCustomer" required maxlength="120"></div>
+        <div class="field"><label for="orderContact">Contact *</label><input id="orderContact" required maxlength="120" placeholder="WhatsApp or email"></div>
+        <div class="field"><label for="orderCourse">Course *</label><select id="orderCourse" required></select></div>
+        <div class="field"><label for="orderAmount">Amount received (&#x20A6;) *</label><input id="orderAmount" type="number" min="0" step="1" required></div>
+        <div class="field"><label for="paymentStatus">Payment status</label><select id="paymentStatus"><option>Pending</option><option>Paid - verified</option><option>Refunded</option><option>Cancelled</option></select></div>
+        <div class="field"><label for="deliveryStatus">Delivery status</label><select id="deliveryStatus"><option>Not delivered</option><option>Delivered</option><option>Access issue</option></select></div>
+        <div class="field full"><label for="orderNotes">Notes (optional)</label><input id="orderNotes" maxlength="500"></div>
+        <div class="field full"><button class="btn" type="submit" id="orderSaveBtn">Add order record</button></div>
+      </form>
+      <h3 style="color:var(--navy);margin-top:22px">Update an existing order</h3><form id="orderUpdateForm" class="form-grid"><div class="field"><label for="updateReference">Order reference *</label><input id="updateReference" required placeholder="SCA-XXXXXXXX"></div><div class="field"><label for="updatePaymentStatus">Payment status</label><select id="updatePaymentStatus"><option>Pending</option><option>Paid - verified</option><option>Refunded</option><option>Cancelled</option></select></div><div class="field"><label for="updateDeliveryStatus">Delivery status</label><select id="updateDeliveryStatus"><option>Not delivered</option><option>Delivered</option><option>Access issue</option></select></div><div class="field"><label for="updateOrderNotes">Notes</label><input id="updateOrderNotes" maxlength="500"></div><div class="field full"><button class="btn" type="submit">Update order status</button></div></form>
+      <div class="table-wrap"><table><thead><tr><th>Reference</th><th>Customer</th><th>Course</th><th>Amount</th><th>Payment</th><th>Delivery</th></tr></thead><tbody id="ordersBody"><tr><td colspan="6" class="muted">Sign in and refresh to load order records.</td></tr></tbody></table></div>
+    </div>
+  </section>
+</main>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

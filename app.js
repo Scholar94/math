@@ -1,15 +1,4 @@
-/*
-  Scholar's Camp Mathematics Academy — public website settings
-  Configure WhatsApp and the Apps Script URL before publishing.
-*/
-const SITE_CONFIG = {
-  brand: "Scholar's Camp Mathematics Academy",
-  whatsappNumber: "2348082320147", // International digits only, e.g. 2348012345678
-  contactEmail: "scholarscamp2@gmail.com",
-  currency: "₦",
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzqYGJxURIQRecKYixd6aPRZYuOFW-qTidDnv4y18Fj5VictaOvHHz_vN_S8qAsoXwVVw/exec" // Deployed Google Apps Script Web App URL
-};
-
+/* Public website logic. Settings (WhatsApp number, server URL) live in config.js. */
 const FALLBACK_SAMPLES = [
   { title: "Indices: The basic rule", topic: "INDICES", description: "Learn what happens when powers with the same base are multiplied.", duration: "Short lesson", youtubeId: "" },
   { title: "Logarithms made clearer", topic: "LOGARITHMS", description: "Connect logarithms with powers and learn the key idea.", duration: "Short lesson", youtubeId: "" },
@@ -83,26 +72,14 @@ function renderCourses(courses) {
 function configureLearnerPortalLink() {
   const nav = document.getElementById("mainNav");
   if (!nav) return;
-  const baseUrl = SITE_CONFIG.appsScriptUrl.trim();
   let link = document.getElementById("learnerPortalLink");
   if (!link) {
     link = document.createElement("a");
     link.id = "learnerPortalLink";
     link.textContent = "Learner sign in";
-    nav.insertBefore(link, nav.querySelector(".nav-cta") || null);
+    nav.insertBefore(link, nav.querySelector(".install-nav-button") || nav.querySelector(".nav-cta") || null);
   }
-  if (!baseUrl) {
-    // Not configured yet: keep the link visible so the problem is obvious instead of the portal silently missing.
-    link.href = "#";
-    link.addEventListener("click", event => {
-      event.preventDefault();
-      showToast("The learner portal is not connected yet. Set appsScriptUrl in app.js.");
-    });
-    return;
-  }
-  link.href = baseUrl + (baseUrl.includes("?") ? "&" : "?") + "page=learn";
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
+  link.href = "learn.html";
 }
 
 function loadPublicCourses() {

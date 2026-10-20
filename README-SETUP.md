@@ -59,14 +59,14 @@ Never put a password or token in the public `app.js` file or in the spreadsheet.
 
 Do not make the Google Sheet public. If Google policy/account settings do not allow the necessary web-app access, do not make the spreadsheet public as a workaround.
 
-## 5. Connect the public website
+## 5. Connect the public website (and the new learner portal)
 
-1. Open `app.js` and find `SITE_CONFIG`.
-2. Set `appsScriptUrl` to the deployed URL ending in `/exec`.
-3. Set `whatsappNumber` to the academy's business number in international digits only, for example `2348012345678`.
-4. Preserve all other config values and save.
-5. Upload all website files, including `index.html`, `styles.css`, `app.js`, `manifest.webmanifest`, `pwa.js`, `service-worker.js` and `icons/`, to a static HTTPS host whose current terms permit a commercial course website. Check the host's terms before launch; do not assume every free static host permits commercial transactions.
-6. Open the HTTPS website on a phone and computer and test it.
+1. Open **`config.js`** (not app.js any more) and set `appsScriptUrl` to the deployed URL ending in `/exec`, and `whatsappNumber` in international digits (for example `2348012345678`). Set `contactEmail` too.
+2. Upload ALL website files to a static HTTPS host: `index.html`, `learn.html`, `admin.html`, `styles.css`, `config.js`, `api.js`, `app.js`, `learn.js`, `admin.js`, `pwa.js`, `service-worker.js`, `manifest.webmanifest`, `icons/` and `vendor/`. Free options: **GitHub Pages** or **Cloudflare Pages**. Check the host's terms permit a commercial course website.
+3. Learners now sign in at `https://YOUR-SITE/learn.html` and you manage the academy at `https://YOUR-SITE/admin.html`. These pages talk to your Apps Script web app with `fetch`, so they no longer run inside Google's sandbox frame. (The old `?page=learn` and `?page=admin` pages still work as a fallback.)
+4. In Apps Script **Project Settings → Script properties** add `PORTAL_URL` = your `learn.html` address. It is included in the emails sent to learners.
+5. After changing Code.gs, run any function once in the editor to **authorize the new permissions** (send email, Drive, triggers), then create a **new deployment version**.
+6. Open the site on a phone and a computer and test.
 
 ## 6. Publish a course
 
@@ -125,7 +125,16 @@ Learners can register, sign in, view courses they are actively enrolled in, play
 
 Lesson completion is learner-marked; it does not prove that the video was watched to the end. The current system does not provide streaming DRM, guaranteed anti-screen-recording, native app-store packages, or a secure video CDN.
 
-## 12. Troubleshooting sign-in and registration
+## 12. New features in this upgrade
+
+- **Automatic emails** (free Gmail quota, roughly 100 a day on a personal account): welcome message, "your course access is ready", password-reset code. Turn them off by adding the script property `EMAILS_DISABLED` = `true`. Failures are written to AuditLog.
+- **Forgot password** on the learner page: the learner receives a 6-digit code (valid 15 minutes) and chooses a new password. Admin can still reset passwords by hand.
+- **Automatic Drive sharing:** granting access shares the course's Drive files (the course-level file and every lesson file) with the learner as Viewer; revoking removes them; a lesson added later is shared with everyone already enrolled. You must **own** the files, and each must be a file, not a folder. If Drive refuses one, the admin message names it so you can share it by hand. Download restrictions still must be set in Drive yourself.
+- **Maths notation** (KaTeX, bundled in `vendor/`, works offline): write `$x^2$`, `$\\frac{1}{2}$` or `$$a^m \\times a^n = a^{m+n}$$` in questions, options and lesson text.
+- **Weekly backup:** run `installWeeklyBackup` once. A copy of the Sheet is saved to your Drive every Sunday and copies older than 60 days are deleted. Run `backupNow` for an immediate copy.
+- **Stay signed in** while the browser tab is open (session survives a refresh).
+
+## 13. Troubleshooting sign-in and registration
 
 | Symptom | Likely cause and fix |
 |---|---|
@@ -134,13 +143,14 @@ Lesson completion is learner-marked; it does not prove that the video was watche
 | "Learners sheet missing" | Run `setupAcademy`. |
 | Setup returns a WARNING about column headings | An old tab has different columns. Fix the header row to match, or rename the old tab and run `setupAcademy` again. |
 | Nothing changes after editing the code | Create a **new version** of the deployment (section 4). |
+| learn.html says "unexpected reply" or "Cannot reach the academy server" | Set `appsScriptUrl` in config.js; deploy the web app as Execute as **Me**, access **Anyone**; create a **new version** after any code change. |
 | Page asks visitors to sign in to Google, or the website shows "sample courses" only | Deployment access must be **Anyone**, executing as **Me**. |
 | "Too many failed attempts" | Five to eight wrong passwords lock that email for 15 minutes. Wait, or reset the password in Admin. |
 | "Your learner session has expired" | Sessions last 6 hours. Sign in again. |
 
 Check **Apps Script → Executions** for the exact server error after any failure.
 
-## 13. Backup and maintenance
+## 14. Backup and maintenance
 
 - Make a dated copy of the Google Sheet before major changes and on a regular schedule.
 - Periodically download an offline copy of important lesson source videos and notes that you own.
@@ -149,7 +159,7 @@ Check **Apps Script → Executions** for the exact server error after any failur
 - Keep the spreadsheet private and protect administrator account access.
 - Keep course and quiz content reasonable in size; Sheets and Apps Script have quotas and are not intended for unlimited traffic.
 
-## 14. Launch checklist
+## 15. Launch checklist
 
 - [ ] Setup creates all 11 tabs without clearing existing records.
 - [ ] `appsscript.json` is installed (V8 runtime) and `setupAcademy` reports no WARNINGS.
@@ -166,6 +176,8 @@ Check **Apps Script → Executions** for the exact server error after any failur
 - [ ] Order status changes and dashboard analytics work.
 - [ ] Free sample videos remain public.
 - [ ] Spreadsheet is private; no secrets are in website JavaScript.
+- [ ] learn.html and admin.html work from your real hosted site (not only from Google).
+- [ ] A test learner receives the welcome, access and reset-code emails, and Drive files are shared automatically on grant.
 - [ ] PWA installation and mobile layout are tested on real devices.
 
 ## Verification status
