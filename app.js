@@ -4,10 +4,10 @@
 */
 const SITE_CONFIG = {
   brand: "Scholar's Camp Mathematics Academy",
-  whatsappNumber: "2348082320147", // International digits only, e.g. 2348012345678
-  contactEmail: "scholarscamp2@gmail.com",
+  whatsappNumber: "", // International digits only, e.g. 2348012345678
+  contactEmail: "",
   currency: "₦",
-  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzqYGJxURIQRecKYixd6aPRZYuOFW-qTidDnv4y18Fj5VictaOvHHz_vN_S8qAsoXwVVw/exec" // Deployed Google Apps Script Web App URL
+  appsScriptUrl: "" // Deployed Google Apps Script Web App URL
 };
 
 const FALLBACK_SAMPLES = [
@@ -82,7 +82,8 @@ function renderCourses(courses) {
 
 function configureLearnerPortalLink() {
   const nav = document.getElementById("mainNav");
-  if (!nav || !SITE_CONFIG.appsScriptUrl.trim()) return;
+  if (!nav) return;
+  const baseUrl = SITE_CONFIG.appsScriptUrl.trim();
   let link = document.getElementById("learnerPortalLink");
   if (!link) {
     link = document.createElement("a");
@@ -90,7 +91,16 @@ function configureLearnerPortalLink() {
     link.textContent = "Learner sign in";
     nav.insertBefore(link, nav.querySelector(".nav-cta") || null);
   }
-  link.href = SITE_CONFIG.appsScriptUrl.trim() + "?page=learn";
+  if (!baseUrl) {
+    // Not configured yet: keep the link visible so the problem is obvious instead of the portal silently missing.
+    link.href = "#";
+    link.addEventListener("click", event => {
+      event.preventDefault();
+      showToast("The learner portal is not connected yet. Set appsScriptUrl in app.js.");
+    });
+    return;
+  }
+  link.href = baseUrl + (baseUrl.includes("?") ? "&" : "?") + "page=learn";
   link.target = "_blank";
   link.rel = "noopener noreferrer";
 }
@@ -105,8 +115,22 @@ function loadPublicCourses() {
   const callbackName = "__academyCoursesCallback";
   const existing = document.getElementById("academyCatalogScript");
   if (existing) existing.remove();
+  let settled = false;
+  const fallback = message => {
+    if (settled) return;
+    settled = true;
+    renderCourses(COURSES);
+    renderSamples(FALLBACK_SAMPLES);
+    showToast(message);
+    delete window[callbackName];
+  };
+  // If the web app is not public or returns an error page, neither onload callback nor onerror may fire.
+  const timer = window.setTimeout(() => fallback("Course catalogue is taking too long. Showing sample courses."), 10000);
   window[callbackName] = payload => {
-    if (payload && Array.isArray(payload.courses)) {
+    window.clearTimeout(timer);
+    if (settled) return;
+    settled = true;
+    if (payload && payload.ok !== false && Array.isArray(payload.courses)) {
       COURSES = payload.courses;
       renderCourses(COURSES);
       const publicSamples = Array.isArray(payload.samples) && payload.samples.length ? payload.samples : FALLBACK_SAMPLES;
@@ -121,12 +145,7 @@ function loadPublicCourses() {
   const script = document.createElement("script");
   script.id = "academyCatalogScript";
   script.src = `${url}${url.includes("?") ? "&" : "?"}action=catalog&callback=${callbackName}&t=${Date.now()}`;
-  script.onerror = () => {
-    renderCourses(COURSES);
-    renderSamples(FALLBACK_SAMPLES);
-    showToast("Course catalogue is temporarily unavailable. Showing sample courses.");
-    delete window[callbackName];
-  };
+  script.onerror = () => { window.clearTimeout(timer); fallback("Course catalogue is temporarily unavailable. Showing sample courses."); };
   document.head.appendChild(script);
 }
 function init() {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "scholars-camp-maths-v1";
+const CACHE_NAME = "scholars-camp-maths-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -24,18 +24,18 @@ self.addEventListener("fetch", event => {
   // Always prefer fresh app.js so new course settings are picked up, but use cache offline.
   if (url.pathname.endsWith("/app.js") || url.pathname.endsWith("/index.html") || request.mode === "navigate") {
     event.respondWith(fetch(request).then(response => {
-      if (response && response.ok) {
+      if (response && response.status === 200) {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {});
       }
       return response;
     }).catch(() => caches.match(request).then(cached => cached || caches.match("./index.html"))));
     return;
   }
   event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(response => {
-    if (response && response.ok) {
+    if (response && response.status === 200) {
       const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+      caches.open(CACHE_NAME).then(cache => cache.put(request, copy)).catch(() => {});
     }
     return response;
   })));

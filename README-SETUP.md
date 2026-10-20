@@ -30,8 +30,8 @@ All components use services with free options. Google quotas, account restrictio
 3. Replace `Code.gs` with `apps-script/Code.gs` from this package.
 4. Open the existing HTML file named `Admin` and replace its contents with `apps-script/Admin.html`.
 5. Open the HTML file named `Learner` and replace its contents with `apps-script/Learner.html`. If it does not exist, click **+ → HTML**, name it `Learner`, then paste the contents.
-6. Save the project.
-7. Select `setupAcademy` and click Run. Authorize requested permissions. The setup creates missing tabs while preserving existing tabs with data.
+6. Open **Project Settings** (gear icon) and tick **Show "appsscript.json" manifest file in editor**. Open `appsscript.json` in the editor and replace its contents with `apps-script/appsscript.json` from this package. This makes sure the project runs on the modern **V8** runtime (the code uses `const`, arrow functions and `.flat()`; on the old Rhino runtime the whole project fails to load, which breaks registration and sign-in).
+7. Save the project, select `setupAcademy` and click Run. Authorize requested permissions. The setup creates missing tabs while preserving existing tabs with data, and it prints a **WARNING** if an existing tab has different column headings than the code expects (the code reads columns by position, so a mismatch breaks registration and sign-in).
 8. Check that the following tabs exist: `Courses`, `Orders`, `Leads`, `Settings`, `Learners`, `Enrollments`, `Lessons`, `Questions`, `Progress`, `QuizAttempts`, `AuditLog`.
 
 The existing `Courses`, `Orders`, `Learners` and `Enrollments` tabs must retain their expected column layouts. Do not rename or reorder columns without updating the code.
@@ -52,7 +52,7 @@ Never put a password or token in the public `app.js` file or in the spreadsheet.
 2. Edit the existing web app deployment or create a new deployment, choose **Web app**, and select a new version.
 3. Set **Execute as** to **Me**.
 4. Public catalogue and learner registration require the web app to be reachable by intended users. Select `Anyone` only if your Google account offers it and you accept the exposure of the public endpoints. Admin mutations require the server-side admin session.
-5. Deploy and copy the URL ending in `/exec`.
+5. Deploy and copy the URL ending in `/exec`. **Every time you change Code.gs or an HTML file you must create a NEW VERSION of the deployment** (Deploy → Manage deployments → pencil icon → Version: New version → Deploy). Saving alone does not update the live web app, which is the most common reason fixes seem not to work.
 6. Admin URL: `YOUR_WEB_APP_URL?page=admin`
 7. Learner URL: `YOUR_WEB_APP_URL?page=learn`
 8. Public catalogue endpoint: `YOUR_WEB_APP_URL?action=catalog`
@@ -106,6 +106,7 @@ The learner quiz is automatically scored on the server. Do not place correct ans
 4. In Admin → Learners and course access, select the registered learner, choose the course, add a payment reference/note and click **Grant course access**.
 5. Separately share the paid Drive file with the learner's registered Google account as Viewer while keeping General access Restricted.
 6. Ask the learner to sign in again and open the course.
+7. If a learner forgets their password, use **Reset password** next to their name in Admin → Learners, type a temporary password (12+ characters) and give it to the learner privately.
 
 Granting enrolment authorizes access in the app; it does not automatically change Drive sharing permissions. When revoking, revoke the app enrolment and also remove the learner's Drive permission.
 
@@ -124,7 +125,22 @@ Learners can register, sign in, view courses they are actively enrolled in, play
 
 Lesson completion is learner-marked; it does not prove that the video was watched to the end. The current system does not provide streaming DRM, guaranteed anti-screen-recording, native app-store packages, or a secure video CDN.
 
-## 12. Backup and maintenance
+## 12. Troubleshooting sign-in and registration
+
+| Symptom | Likely cause and fix |
+|---|---|
+| Learner page says "Open this page using the deployed Apps Script web-app URL" | You opened the HTML file directly. Use `YOUR_WEB_APP_URL?page=learn`. |
+| "Spreadsheet is not configured" / "Cannot open the academy spreadsheet" | Run `setupAcademy` from the Apps Script editor attached to the Sheet and authorize. |
+| "Learners sheet missing" | Run `setupAcademy`. |
+| Setup returns a WARNING about column headings | An old tab has different columns. Fix the header row to match, or rename the old tab and run `setupAcademy` again. |
+| Nothing changes after editing the code | Create a **new version** of the deployment (section 4). |
+| Page asks visitors to sign in to Google, or the website shows "sample courses" only | Deployment access must be **Anyone**, executing as **Me**. |
+| "Too many failed attempts" | Five to eight wrong passwords lock that email for 15 minutes. Wait, or reset the password in Admin. |
+| "Your learner session has expired" | Sessions last 6 hours. Sign in again. |
+
+Check **Apps Script → Executions** for the exact server error after any failure.
+
+## 13. Backup and maintenance
 
 - Make a dated copy of the Google Sheet before major changes and on a regular schedule.
 - Periodically download an offline copy of important lesson source videos and notes that you own.
@@ -133,10 +149,12 @@ Lesson completion is learner-marked; it does not prove that the video was watche
 - Keep the spreadsheet private and protect administrator account access.
 - Keep course and quiz content reasonable in size; Sheets and Apps Script have quotas and are not intended for unlimited traffic.
 
-## 13. Launch checklist
+## 14. Launch checklist
 
 - [ ] Setup creates all 11 tabs without clearing existing records.
+- [ ] `appsscript.json` is installed (V8 runtime) and `setupAcademy` reports no WARNINGS.
 - [ ] `setAdminPassword` succeeds and old `getUi()` calls are absent from the password setup path.
+- [ ] After every code change, a new deployment version was created.
 - [ ] Admin login works and an unauthenticated user cannot call admin mutations.
 - [ ] Public catalogue exposes only published public fields, not paid Drive URLs.
 - [ ] Course creation, edit, publish and unpublish work.
@@ -152,4 +170,4 @@ Lesson completion is learner-marked; it does not prove that the video was watche
 
 ## Verification status
 
-Local static checks can validate archive integrity, JavaScript syntax and file presence. Live Google authorization, deployment permissions, actual Drive access and installation on real devices must be tested in the owner's Google account; this package does not claim those live tests have already passed.
+The code was tested against a simulated Google Sheets/Apps Script environment and in a real Chromium browser (see TEST-REPORT.md). Live Google authorization, deployment permissions, actual Drive access and installation on real devices must still be tested in the owner's Google account.
