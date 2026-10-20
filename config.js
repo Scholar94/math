@@ -6,5 +6,5 @@ const SITE_CONFIG = {
   whatsappNumber: "", // International digits only, e.g. 2348012345678
   contactEmail: "",
   currency: "\u20A6",
-  appsScriptUrl: "" // Deployed Google Apps Script Web App URL (ends with /exec)
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzqYGJxURIQRecKYixd6aPRZYuOFW-qTidDnv4y18Fj5VictaOvHHz_vN_S8qAsoXwVVw/exec" // Deployed Google Apps Script Web App URL (ends with /exec)
 };
