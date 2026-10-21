@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certificate - Scholar's Camp Mathematics Academy</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+:root{--navy:#102b52;--blue:#1d65c1;--gold:#f6b83f;--ink:#17263b;--muted:#66758b}
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f7;color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif}
+.bar{max-width:1000px;margin:18px auto;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-family:system-ui,sans-serif}
+.btn{border:0;border-radius:9px;padding:11px 16px;font:600 1rem system-ui,sans-serif;cursor:pointer;background:var(--blue);color:#fff;text-decoration:none}
+.btn.secondary{background:#fff;color:var(--navy);border:1px solid #cfd9e5}
+.msg{max-width:1000px;margin:20px auto;padding:14px 16px;border-radius:10px;font-family:system-ui,sans-serif}
+.msg.error{background:#fff0ef;color:#b42318}
+.msg.ok{background:#eaf8f1;color:#16845b}
+form.verify{max-width:1000px;margin:20px auto;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap;font-family:system-ui,sans-serif}
+form.verify input{flex:1;min-width:220px;padding:12px;border:1px solid #cfd9e5;border-radius:9px;font:inherit}
+.cert{width:min(1000px,calc(100% - 32px));aspect-ratio:1.414/1;margin:16px auto 40px;background:#fff;border:14px solid var(--navy);outline:3px solid var(--gold);outline-offset:-26px;padding:6% 7%;text-align:center;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 18px 48px rgba(16,43,82,.15)}
+.cert .org{letter-spacing:.2em;text-transform:uppercase;color:var(--navy);font:700 clamp(.7rem,1.6vw,1.1rem) system-ui,sans-serif}
+.cert h1{margin:.2em 0;font-size:clamp(1.6rem,5vw,3.4rem);color:var(--navy);font-weight:700}
+.cert .small{color:var(--muted);font-size:clamp(.8rem,1.6vw,1.1rem)}
+.cert .name{font-size:clamp(1.6rem,5vw,3.2rem);color:var(--blue);border-bottom:2px solid var(--gold);display:inline-block;padding:0 .5em;margin:.2em auto;font-style:italic}
+.cert .course{font-size:clamp(1.1rem,3vw,2rem);font-weight:700;color:var(--navy)}
+.cert .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;font-size:clamp(.7rem,1.5vw,1rem);color:var(--ink)}
+.cert .foot div{min-width:30%}
+.cert .line{border-top:1px solid var(--ink);padding-top:4px;margin-top:2px}
+.seal{width:clamp(52px,9vw,96px);aspect-ratio:1;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font:800 clamp(1.6rem,4vw,3rem) system-ui,sans-serif;margin:0 auto}
+.hidden{display:none!important}
+@media print{
+  @page{size:A4 landscape;margin:0}
+  body{background:#fff}
+  .bar,.msg,form.verify{display:none!important}
+  .cert{width:100%;margin:0;border-width:16px;box-shadow:none;height:100vh;aspect-ratio:auto;page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"><a class="btn secondary" href="learn.html">&larr; Back to my courses</a><button class="btn" type="button" onclick="window.print()">Print / Save as PDF</button></div>
+<div id="msg" class="msg hidden"></div>
+<form class="verify" id="verifyForm" onsubmit="return false"><input id="certInput" placeholder="Enter a certificate number, e.g. SC-ABC123DEF4" maxlength="20" aria-label="Certificate number"><button class="btn" type="submit">Verify certificate</button></form>
+<div class="cert hidden" id="cert">
+  <div><div class="org" id="cOrg"></div></div>
+  <div>
+    <h1>Certificate of Completion</h1>
+    <p class="small">This is to certify that</p>
+    <div class="name" id="cName"></div>
+    <p class="small">has successfully completed the course</p>
+    <div class="course" id="cCourse"></div>
+  </div>
+  <div class="seal">&sum;</div>
+  <div class="foot">
+    <div><div id="cDate"></div><div class="line">Date issued</div></div>
+    <div style="text-align:center"><div id="cId"></div><div class="line">Certificate number</div></div>
+    <div style="text-align:right"><div id="cSign"></div><div class="line">Authorised signature</div></div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+function show(text, cls) { var m = document.getElementById('msg'); m.className = 'msg ' + cls; m.textContent = text; }
+async function verify(id) {
+  document.getElementById('cert').classList.add('hidden');
+  show('Checking certificate...', 'ok');
+  try {
+    var r = await apiCall('verifyCertificate', id);
+    if (!r || !r.valid) { show('This certificate number was not found. Check that it was typed exactly.', 'error'); return; }
+    document.getElementById('cOrg').textContent = r.organization;
+    document.getElementById('cName').textContent = r.name;
+    document.getElementById('cCourse').textContent = r.course;
+    document.getElementById('cDate').textContent = r.issuedAt ? new Date(r.issuedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+    document.getElementById('cId').textContent = r.certId;
+    document.getElementById('cSign').textContent = r.signatory;
+    document.getElementById('cert').classList.remove('hidden');
+    document.title = 'Certificate ' + r.certId;
+    show('Verified: this certificate was issued by ' + r.organization + '.', 'ok');
+  } catch (e) { show(e.message, 'error'); }
+}
+document.getElementById('verifyForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var id = document.getElementById('certInput').value.trim();
+  if (id) { history.replaceState(null, '', '?id=' + encodeURIComponent(id)); verify(id); }
+});
+var qid = new URLSearchParams(location.search).get('id');
+if (qid) { document.getElementById('certInput').value = qid; verify(qid); }
+</script>
+</body>
+</html>

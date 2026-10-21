@@ -1,4 +1,4 @@
-const CACHE_NAME = "scholars-camp-maths-v3";
+const CACHE_NAME = "scholars-camp-maths-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,13 @@ const APP_SHELL = [
   "./config.js",
   "./api.js",
   "./learn.html",
+  "./certificate.html",
+  "./notes.html",
+  "./worksheet.html",
+  "./blog.html",
+  "./post.html",
+  "./posts.js",
+  "./analytics.js",
   "./learn.js",
   "./vendor/katex/katex.min.css",
   "./vendor/katex/katex.min.js",
@@ -29,7 +36,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
   // Always prefer fresh app.js so new course settings are picked up, but use cache offline.
-  if (url.pathname.endsWith("/app.js") || url.pathname.endsWith("/config.js") || url.pathname.endsWith("/learn.js") || url.pathname.endsWith("/learn.html") || url.pathname.endsWith("/index.html") || request.mode === "navigate") {
+  if (url.pathname.endsWith("/app.js") || url.pathname.endsWith("/config.js") || url.pathname.endsWith("/learn.js") || url.pathname.endsWith("/learn.html") || url.pathname.endsWith("/certificate.html") || url.pathname.endsWith("/posts.js") || url.pathname.endsWith("/blog.html") || url.pathname.endsWith("/post.html") || url.pathname.endsWith("/index.html") || request.mode === "navigate") {
     event.respondWith(fetch(request).then(response => {
       if (response && response.status === 200) {
         const copy = response.clone();

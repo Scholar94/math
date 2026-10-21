@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson notes - Scholar's Camp Mathematics Academy</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<style>
+:root{--navy:#102b52;--blue:#1d65c1;--ink:#17263b;--muted:#66758b}
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f7;color:var(--ink);font:17px/1.65 Georgia,"Times New Roman",serif}
+.bar{max-width:820px;margin:16px auto;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap;font-family:system-ui,sans-serif}
+.btn{border:0;border-radius:9px;padding:10px 16px;font:600 1rem system-ui,sans-serif;cursor:pointer;background:var(--blue);color:#fff;text-decoration:none}
+.btn.secondary{background:#fff;color:var(--navy);border:1px solid #cfd9e5}
+.sheet{max-width:820px;margin:0 auto 40px;background:#fff;padding:36px 40px;box-shadow:0 10px 30px rgba(16,43,82,.12);border-radius:6px}
+.org{font:700 .8rem system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+h1{color:var(--navy);margin:.2em 0 0;font-size:1.9rem}
+.sub{color:var(--muted);font:.95rem system-ui,sans-serif;border-bottom:2px solid var(--navy);padding-bottom:10px;margin-bottom:18px}
+h2{color:var(--navy);font-size:1.4rem;margin:1.4em 0 .3em}
+h3{color:var(--navy);font-size:1.15rem;margin:1.2em 0 .2em}
+p{margin:.6em 0}
+ul,ol{margin:.5em 0 .5em 1.3em;padding:0}
+hr{border:0;border-top:1px solid #cfd9e5;margin:1.2em 0}
+.foot{margin-top:28px;border-top:1px solid #cfd9e5;padding-top:8px;color:var(--muted);font:.8rem system-ui,sans-serif}
+.msg{max-width:820px;margin:30px auto;padding:14px 16px;border-radius:10px;font-family:system-ui,sans-serif;background:#fff0ef;color:#b42318}
+.hidden{display:none!important}
+@media(max-width:600px){.sheet{padding:22px 18px}}
+@media print{body{background:#fff;font-size:12pt}.bar,.msg{display:none}.sheet{box-shadow:none;padding:0;max-width:none}}
+</style>
+</head>
+<body>
+<div class="bar"><a class="btn secondary" href="learn.html">&larr; Back to my courses</a><button class="btn" onclick="window.print()">&#128424; Print / save as PDF</button></div>
+<div id="err" class="msg hidden" role="alert"></div>
+<article class="sheet hidden" id="sheet">
+  <div class="org" id="org"></div>
+  <h1 id="title"></h1>
+  <div class="sub" id="sub"></div>
+  <div id="body"></div>
+  <div class="foot" id="foot"></div>
+</article>
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script>
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+/* Minimal, safe markup. Everything is escaped FIRST, then only these patterns are turned into tags:
+   # Heading, ## Sub-heading, - bullet, 1. numbered, **bold**, *italic*, --- rule. $maths$ is left for KaTeX. */
+function inline(t){return t.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g,"$1<em>$2</em>")}
+function render(text){
+  var lines=esc(text).split("\n"),out=[],list=null,para=[];
+  function flushP(){if(para.length){out.push("<p>"+inline(para.join(" "))+"</p>");para=[]}}
+  function closeL(){if(list){out.push("</"+list+">");list=null}}
+  lines.forEach(function(raw){
+    var l=raw.replace(/\s+$/,""),m;
+    if(!l.trim()){flushP();closeL();return}
+    if(/^---+$/.test(l.trim())){flushP();closeL();out.push("<hr>");return}
+    if((m=/^(#{1,2})\s+(.*)$/.exec(l))){flushP();closeL();out.push(m[1].length===1?"<h2>"+inline(m[2])+"</h2>":"<h3>"+inline(m[2])+"</h3>");return}
+    if((m=/^[-*]\s+(.*)$/.exec(l))){flushP();if(list!=="ul"){closeL();out.push("<ul>");list="ul"}out.push("<li>"+inline(m[1])+"</li>");return}
+    if((m=/^\d+[.)]\s+(.*)$/.exec(l))){flushP();if(list!=="ol"){closeL();out.push("<ol>");list="ol"}out.push("<li>"+inline(m[1])+"</li>");return}
+    closeL();para.push(l.trim());
+  });
+  flushP();closeL();return out.join("\n");
+}
+function fail(m){document.getElementById("err").textContent=m;document.getElementById("err").classList.remove("hidden")}
+(async function(){
+  var q=new URLSearchParams(location.search),token="";
+  try{token=(JSON.parse(sessionStorage.getItem("scLearner")||"null")||{}).t||""}catch(e){}
+  if(!token){fail("Please sign in on the learner portal first, then open the notes from your lesson.");return}
+  try{
+    var n=await apiCall("learnerGetNotes",token,q.get("course")||"",q.get("lesson")||"");
+    document.title=n.title+" - Notes";
+    document.getElementById("org").textContent=n.organization||"";
+    document.getElementById("title").textContent=n.title;
+    document.getElementById("sub").textContent=n.course;
+    document.getElementById("body").innerHTML=render(n.text);
+    document.getElementById("foot").textContent="Licensed to "+n.licensedTo+" for personal study. Copying or sharing these notes is not allowed.";
+    document.getElementById("sheet").classList.remove("hidden");
+    if(window.renderMathInElement)renderMathInElement(document.getElementById("body"),{delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}],throwOnError:false});
+  }catch(e){fail(e.message)}
+})();
+</script>
+</body>
+</html>

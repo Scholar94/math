@@ -34,7 +34,7 @@ $("loginForm").addEventListener("submit", async event => {
     setStatus("loginStatus", error.message || "Sign-in failed.", "error");
   } finally { button.disabled = false; }
 });
-async function refreshAll() { await loadCourses(); await loadOrders(); await refreshLearners(); await loadAnalytics(); }
+async function refreshAll() { await loadCourses(); await loadOrders(); await refreshLearners(); await loadAnalytics(); await loadCharts(); await loadLessonsAdmin(); await loadQuestionsAdmin(); }
 async function loadCourses(note) {
   try {
     courses = await callServer("adminListCourses", adminToken);
@@ -54,12 +54,13 @@ function renderCourseList() {
     </article>`).join("");
 }
 function fillOrderCourses() {
-  ["grantCourse","orderCourse","lessonCourse","questionCourse"].forEach(id => {
+  ["grantCourse","orderCourse","lessonCourse","questionCourse","lmCourse","qmCourse","importCourse"].forEach(id => {
     const select = $(id); if (!select) return;
     const previous = select.value;
     select.innerHTML = courses.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title)} \u2014 \u20A6${Number(c.price).toLocaleString("en-NG")}</option>`).join("");
     if (courses.some(c => c.id === previous)) select.value = previous;
   });
+  const ann = $("announceCourse"); if (ann) { const prev = ann.value; ann.innerHTML = '<option value="">All learners</option>' + courses.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title)} (enrolled learners)</option>`).join(""); ann.value = courses.some(c => c.id === prev) ? prev : ""; }
   syncAmount();
 }
 function syncAmount() {
@@ -130,8 +131,6 @@ $("orderForm").addEventListener("submit", async event => {
 });
 $("orderUpdateForm").addEventListener("submit",async e=>{e.preventDefault();try{await callServer("adminSetOrderStatus",adminToken,$("updateReference").value,$("updatePaymentStatus").value,$("updateDeliveryStatus").value,$("updateOrderNotes").value);await loadOrders("Order status updated. Verify the actual bank record before choosing Paid - verified.");await loadAnalytics()}catch(e){setStatus("orderStatus",e.message,"error")}});
 async function loadAnalytics(){try{const a=await callServer("adminGetAnalytics",adminToken);const cards=[["Learners",a.learners],["Courses",a.courses],["Lessons",a.lessons],["Enrolment records",a.enrollments],["Orders",a.orders],["Pending orders",a.pendingOrders],["Verified orders",a.verifiedOrders],["Verified revenue",`\u20A6${Number(a.verifiedRevenue||0).toLocaleString()}`],["Quiz attempts",a.quizAttempts]];$("analyticsCards").innerHTML=cards.map(([k,v])=>`<div class="panel" style="margin:0;padding:14px"><div class="muted">${escapeHtml(k)}</div><strong style="font-size:1.35rem;color:var(--navy)">${escapeHtml(v)}</strong></div>`).join("");setStatus("analyticsStatus","Overview updated.","success")}catch(e){setStatus("analyticsStatus",e.message,"error")}}
-$("lessonForm").addEventListener("submit",async e=>{e.preventDefault();try{await callServer("adminAddLesson",adminToken,{courseId:$("lessonCourse").value,order:$("lessonOrder").value,title:$("lessonTitle").value,description:$("lessonDescription").value,driveFileId:$("lessonFileId").value,driveUrl:$("lessonUrl").value,durationMinutes:$("lessonDuration").value,published:$("lessonPublished").checked});setStatus("contentStatus","Lesson added successfully. Enrolled learners can now see it.","success");$("lessonForm").reset();$("lessonOrder").value="1";$("lessonPublished").checked=true;await loadAnalytics()}catch(e){setStatus("contentStatus",e.message,"error")}});
-$("questionForm").addEventListener("submit",async e=>{e.preventDefault();try{await callServer("adminAddQuestion",adminToken,{courseId:$("questionCourse").value,topic:$("questionTopic").value,question:$("questionText").value,a:$("optionA").value,b:$("optionB").value,c:$("optionC").value,d:$("optionD").value,correct:$("correctOption").value,explanation:$("questionExplanation").value,published:$("questionPublished").checked});setStatus("contentStatus","Question added successfully.","success");$("questionForm").reset();$("questionTopic").value="General practice";$("questionPublished").checked=true;await loadAnalytics()}catch(e){setStatus("contentStatus",e.message,"error")}});
 let learners = [];
 let enrollments = [];
 function formatDate(value) {
@@ -200,3 +199,159 @@ async function logout(message) {
   $("enrollmentsBody").innerHTML = '<tr><td colspan="6" class="muted">Sign in to load enrolments.</td></tr>';
   setStatus("loginStatus", typeof message === "string" ? message : "You have signed out.", typeof message === "string" ? "error" : "success");
 }
+
+/* ---------- lessons manager ---------- */
+let lessonsCache = [], questionsCache = [];
+function shorten(text, n) { text = String(text || ""); return text.length > n ? text.slice(0, n) + "..." : text; }
+async function loadLessonsAdmin() {
+  const id = $("lmCourse").value;
+  if (!id) { $("lessonsBody").innerHTML = '<tr><td colspan="6" class="muted">Create a course first.</td></tr>'; return; }
+  try {
+    lessonsCache = await callServer("adminListLessons", adminToken, id);
+    $("lessonsBody").innerHTML = lessonsCache.length ? lessonsCache.map(l => {
+      const video = l.youtubeId ? "YouTube" : (l.driveFileId || l.driveUrl ? "Drive" : "none");
+      return `<tr><td>${escapeHtml(l.order)}</td><td>${escapeHtml(l.title)}</td><td>${video}</td><td>${l.notesUrl || l.notesText ? "yes" : "-"}</td><td><span class="pill ${l.published ? "" : "off"}">${l.published ? "Published" : "Hidden"}</span></td><td><button class="btn secondary" onclick="editLesson('${escapeHtml(l.id)}')">Edit</button> <button class="btn secondary" onclick="toggleLesson('${escapeHtml(l.id)}')">${l.published ? "Hide" : "Publish"}</button> <button class="btn danger" onclick="deleteLesson('${escapeHtml(l.id)}')">Delete</button></td></tr>`;
+    }).join("") : '<tr><td colspan="6" class="muted">No lessons in this course yet.</td></tr>';
+  } catch (error) { setStatus("contentStatus", error.message, "error"); }
+}
+$("lmCourse").addEventListener("change", loadLessonsAdmin);
+function lessonFormData() {
+  return { id: $("lessonId").value, courseId: $("lessonCourse").value, order: $("lessonOrder").value, title: $("lessonTitle").value, description: $("lessonDescription").value, driveFileId: $("lessonFileId").value, driveUrl: $("lessonUrl").value, durationMinutes: $("lessonDuration").value, youtubeId: $("lessonYoutube").value, notesUrl: $("lessonNotes").value, notesText: $("lessonNotesText").value, published: $("lessonPublished").checked };
+}
+function resetLessonForm() {
+  const course = $("lessonCourse").value;
+  $("lessonForm").reset(); $("lessonId").value = ""; $("lessonOrder").value = "1"; $("lessonPublished").checked = true; if (course) $("lessonCourse").value = course;
+  $("lessonFormTitle").textContent = "Add a lesson"; $("lessonSaveBtn").textContent = "Add lesson"; $("lessonCancelBtn").classList.add("hidden");
+}
+function editLesson(id) {
+  const l = lessonsCache.find(x => x.id === id); if (!l) return;
+  $("lessonId").value = l.id; $("lessonCourse").value = l.courseId; $("lessonOrder").value = l.order; $("lessonTitle").value = l.title; $("lessonDuration").value = l.durationMinutes;
+  $("lessonDescription").value = l.description; $("lessonYoutube").value = l.youtubeId; $("lessonFileId").value = l.driveFileId; $("lessonUrl").value = l.driveUrl; $("lessonNotes").value = l.notesUrl; $("lessonNotesText").value = l.notesText || ""; $("lessonPublished").checked = !!l.published;
+  $("lessonFormTitle").textContent = "Edit lesson"; $("lessonSaveBtn").textContent = "Save changes"; $("lessonCancelBtn").classList.remove("hidden");
+  $("lessonForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("lessonForm").addEventListener("submit", async e => {
+  e.preventDefault(); const btn = $("lessonSaveBtn"); btn.disabled = true;
+  const data = lessonFormData();
+  try {
+    const result = await callServer(data.id ? "adminUpdateLesson" : "adminAddLesson", adminToken, data);
+    resetLessonForm();
+    $("lmCourse").value = data.courseId;
+    await loadLessonsAdmin(); await loadAnalytics();
+    setStatus("contentStatus", result.message || "Lesson saved.", "success");
+  } catch (error) { setStatus("contentStatus", error.message, "error"); }
+  finally { btn.disabled = false; }
+});
+async function toggleLesson(id) {
+  const l = lessonsCache.find(x => x.id === id); if (!l) return;
+  try { const r = await callServer("adminUpdateLesson", adminToken, { ...l, published: !l.published }); await loadLessonsAdmin(); setStatus("contentStatus", r.message, "success"); }
+  catch (error) { setStatus("contentStatus", error.message, "error"); }
+}
+async function deleteLesson(id) {
+  const l = lessonsCache.find(x => x.id === id); if (!l) return;
+  if (!confirm(`Delete the lesson "${l.title}"? Learners' completion records for it stop counting.`)) return;
+  try { const r = await callServer("adminDeleteLesson", adminToken, id); await loadLessonsAdmin(); await loadAnalytics(); setStatus("contentStatus", r.message, "success"); }
+  catch (error) { setStatus("contentStatus", error.message, "error"); }
+}
+
+/* ---------- question bank manager ---------- */
+async function loadQuestionsAdmin() {
+  const id = $("qmCourse").value;
+  if (!id) { $("questionsBody").innerHTML = '<tr><td colspan="5" class="muted">Create a course first.</td></tr>'; return; }
+  try {
+    questionsCache = await callServer("adminListQuestions", adminToken, id);
+    $("questionsBody").innerHTML = questionsCache.length ? questionsCache.map(q => `<tr><td>${escapeHtml(q.topic)}</td><td>${escapeHtml(shorten(q.question, 90))}</td><td>${escapeHtml(q.correct)}</td><td><span class="pill ${q.published ? "" : "off"}">${q.published ? "Published" : "Hidden"}</span></td><td><button class="btn secondary" onclick="editQuestion('${escapeHtml(q.id)}')">Edit</button> <button class="btn secondary" onclick="toggleQuestion('${escapeHtml(q.id)}')">${q.published ? "Hide" : "Publish"}</button> <button class="btn danger" onclick="deleteQuestion('${escapeHtml(q.id)}')">Delete</button></td></tr>`).join("") : '<tr><td colspan="5" class="muted">No questions in this course yet.</td></tr>';
+    setStatus("questionStatus", `${questionsCache.length} question(s) in this course.`, "success");
+  } catch (error) { setStatus("questionStatus", error.message, "error"); }
+}
+$("qmCourse").addEventListener("change", loadQuestionsAdmin);
+function resetQuestionForm() {
+  const course = $("questionCourse").value;
+  $("questionForm").reset(); $("questionId").value = ""; $("questionTopic").value = "General practice"; $("questionPublished").checked = true; if (course) $("questionCourse").value = course;
+  $("questionFormTitle").textContent = "Add a multiple-choice question"; $("questionSaveBtn").textContent = "Add question"; $("questionCancelBtn").classList.add("hidden");
+}
+function editQuestion(id) {
+  const q = questionsCache.find(x => x.id === id); if (!q) return;
+  $("questionId").value = q.id; $("questionCourse").value = q.courseId; $("questionTopic").value = q.topic; $("questionText").value = q.question;
+  $("optionA").value = q.a; $("optionB").value = q.b; $("optionC").value = q.c; $("optionD").value = q.d; $("correctOption").value = q.correct;
+  $("questionExplanation").value = q.explanation; $("questionPublished").checked = !!q.published;
+  $("questionFormTitle").textContent = "Edit question"; $("questionSaveBtn").textContent = "Save changes"; $("questionCancelBtn").classList.remove("hidden");
+  $("questionForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("questionForm").addEventListener("submit", async e => {
+  e.preventDefault(); const btn = $("questionSaveBtn"); btn.disabled = true;
+  const id = $("questionId").value, courseId = $("questionCourse").value;
+  const data = { id: id, courseId: courseId, topic: $("questionTopic").value, question: $("questionText").value, a: $("optionA").value, b: $("optionB").value, c: $("optionC").value, d: $("optionD").value, correct: $("correctOption").value, explanation: $("questionExplanation").value, published: $("questionPublished").checked };
+  try {
+    const result = await callServer(id ? "adminUpdateQuestion" : "adminAddQuestion", adminToken, data);
+    resetQuestionForm(); $("qmCourse").value = courseId;
+    await loadQuestionsAdmin(); await loadAnalytics();
+    setStatus("questionStatus", (result && result.message) || "Question saved.", "success");
+  } catch (error) { setStatus("questionStatus", error.message, "error"); }
+  finally { btn.disabled = false; }
+});
+async function toggleQuestion(id) {
+  const q = questionsCache.find(x => x.id === id); if (!q) return;
+  try { await callServer("adminUpdateQuestion", adminToken, { ...q, published: !q.published }); await loadQuestionsAdmin(); }
+  catch (error) { setStatus("questionStatus", error.message, "error"); }
+}
+async function deleteQuestion(id) {
+  if (!confirm("Delete this question?")) return;
+  try { const r = await callServer("adminDeleteQuestion", adminToken, id); await loadQuestionsAdmin(); await loadAnalytics(); setStatus("questionStatus", r.message, "success"); }
+  catch (error) { setStatus("questionStatus", error.message, "error"); }
+}
+$("importForm").addEventListener("submit", async e => {
+  e.preventDefault(); const btn = $("importBtn"); btn.disabled = true; setStatus("importStatus", "Importing...");
+  try {
+    const r = await callServer("adminImportQuestions", adminToken, $("importCourse").value, $("importText").value, $("importPublish").checked);
+    const detail = r.errors && r.errors.length ? " Problems: " + r.errors.join(" | ") : "";
+    setStatus("importStatus", r.message + detail, r.errors && r.errors.length ? "error" : "success");
+    if (r.added) { $("importText").value = ""; $("qmCourse").value = $("importCourse").value; await loadQuestionsAdmin(); await loadAnalytics(); }
+  } catch (error) { setStatus("importStatus", error.message, "error"); }
+  finally { btn.disabled = false; }
+});
+
+/* ---------- announcements ---------- */
+$("announceForm").addEventListener("submit", async e => {
+  e.preventDefault(); const btn = $("announceBtn"); btn.disabled = true;
+  if ($("announceEmail").checked && !confirm("Send this announcement by email to the selected learners now?")) { btn.disabled = false; return; }
+  try {
+    const r = await callServer("adminSendAnnouncement", adminToken, { courseId: $("announceCourse").value, subject: $("announceSubject").value, message: $("announceMessage").value, emailLearners: $("announceEmail").checked });
+    $("announceSubject").value = ""; $("announceMessage").value = ""; $("announceEmail").checked = false;
+    setStatus("announceStatus", r.message, "success");
+  } catch (error) { setStatus("announceStatus", error.message, "error"); }
+  finally { btn.disabled = false; }
+});
+
+/* ---------- charts ---------- */
+function barChart(title, labels, values, fmt) {
+  const max = Math.max(1, ...values);
+  const rows = labels.map((l, i) => `<div class="crow"><span title="${escapeHtml(l)}">${escapeHtml(l)}</span><div class="track"><i style="width:${Math.round(values[i] / max * 100)}%"></i></div><b>${escapeHtml(fmt ? fmt(values[i]) : values[i])}</b></div>`).join("");
+  return `<div class="chart"><h3>${escapeHtml(title)}</h3>${rows || '<p class="muted">No data yet.</p>'}</div>`;
+}
+async function loadCharts() {
+  try {
+    const c = await callServer("adminGetCharts", adminToken);
+    $("chartsBox").innerHTML = '<div class="chartgrid">' +
+      barChart("Verified revenue by month (\u20A6)", c.months, c.revenue, v => Number(v).toLocaleString()) +
+      barChart("New enrolments by month", c.months, c.enrolments) +
+      barChart("New learner sign-ups by month", c.months, c.registrations) +
+      barChart("Most popular courses (active enrolments)", c.topCourses.map(x => x.title), c.topCourses.map(x => x.count)) +
+      barChart("Average quiz score by course (%)", c.quizAverages.map(x => x.title + " (" + x.attempts + ")"), c.quizAverages.map(x => x.average), v => v + "%") + '</div>';
+  } catch (error) { $("chartsBox").innerHTML = ""; setStatus("analyticsStatus", error.message, "error"); }
+}
+
+/* ---------- starter questions and certificate template ---------- */
+$("starterBtn").addEventListener("click", () => {
+  if (typeof STARTER_QUESTIONS === "undefined") { setStatus("importStatus", "The starter bank file did not load.", "error"); return; }
+  $("importText").value = STARTER_QUESTIONS.join("\n");
+  setStatus("importStatus", STARTER_QUESTIONS.length + " original questions are ready in the box. Choose the course and press Import. Questions already in the course are skipped, so it is safe to press twice.", "success");
+});
+$("certTplBtn").addEventListener("click", async () => {
+  const btn = $("certTplBtn"); btn.disabled = true; setStatus("certTplStatus", "Creating the template in your Google Drive...");
+  try {
+    const r = await callServer("adminCreateCertificateTemplate", adminToken);
+    $("certTplStatus").innerHTML = `<div class="status success">${escapeHtml(r.message || "Template created.")} <a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer">Open the template</a></div>`;
+  } catch (error) { setStatus("certTplStatus", error.message, "error"); }
+  finally { btn.disabled = false; }
+});

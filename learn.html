@@ -1,15 +1,101 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Learner portal</title><style>
-:root{--navy:#102b52;--blue:#1d65c1;--gold:#f6b83f;--ink:#17263b;--muted:#66758b;--line:#e1e8f0;--bg:#f5f8fc;--red:#b42318;--green:#16845b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{background:var(--navy);color:white;padding:20px max(18px,calc((100% - 1000px)/2))}header h1{font-size:1.2rem;margin:0}header p{margin:4px 0 0;color:#d1ddef;font-size:.9rem}main{max-width:1000px;margin:28px auto;padding:0 18px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px}.hidden{display:none!important}.muted{color:var(--muted);font-size:.9rem}label{display:block;font-weight:700;font-size:.88rem;margin:0 0 6px}input{width:100%;padding:12px;border:1px solid #cfd9e5;border-radius:9px;font:inherit;margin-bottom:14px}.btn{border:0;border-radius:9px;padding:11px 15px;font:inherit;font-weight:750;cursor:pointer;background:var(--blue);color:white}.btn.secondary{background:#eaf2ff;color:var(--navy)}.status{padding:11px 13px;border-radius:9px;background:#edf4ff;color:var(--navy);margin-top:12px}.status.error{background:#fff0ef;color:var(--red)}.status.success{background:#eaf8f1;color:var(--green)}.tabs{display:flex;gap:8px;margin-bottom:16px}.course{border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}.course h3{margin:0 0 4px;color:var(--navy)}.course iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;margin-top:12px}.note{background:#fff8e7;color:#685221;padding:12px;border-radius:9px;font-size:.88rem}.lesson{border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0}.lesson iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px}.question{padding:14px;border:1px solid var(--line);border-radius:10px;margin:10px 0}.question label{font-weight:500;display:flex;gap:8px;align-items:flex-start;margin:8px 0}.question input{width:auto;margin:4px 0}.progressbar{height:8px;background:#e8eef6;border-radius:99px;overflow:hidden}.progressbar span{display:block;height:100%;background:var(--green)}.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}@media(max-width:600px){.panel{padding:16px}}
-.linkbtn{background:none;border:0;color:var(--blue);padding:0;font:inherit;cursor:pointer;text-decoration:underline}.katex{font-size:1.05em}</style><link rel="stylesheet" href="vendor/katex/katex.min.css"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#102b52"></head><body><header><a href="index.html" style="color:#d1ddef;font-size:.85rem">&larr; Back to the academy website</a><h1>Scholar's Camp Mathematics Academy</h1><p>Learner portal &#xB7; Your enrolled courses</p></header><main>
-<section id="auth" class="panel"><h2 id="authTitle">Learner sign in</h2><p class="muted">Create an account to access courses that the academy has enrolled you in after verifying payment.</p><div class="tabs"><button class="btn secondary" onclick="showMode('login')">Sign in</button><button class="btn secondary" onclick="showMode('register')">Create account</button></div>
-<form id="loginForm" onsubmit="return false"><label for="loginEmail">Email address</label><input id="loginEmail" type="email" autocomplete="email" required><label for="loginPassword">Password</label><input id="loginPassword" type="password" minlength="12" autocomplete="current-password" required><button class="btn" type="submit" id="loginBtn">Sign in</button> <a href="#" id="forgotLink" style="margin-left:12px">Forgot password?</a></form>
-<form id="registerForm" onsubmit="return false" class="hidden"><label for="regName">Full name</label><input id="regName" maxlength="100" autocomplete="name" required><label for="regEmail">Email address</label><input id="regEmail" type="email" autocomplete="email" required><label for="regPassword">Create password (12+ characters)</label><input id="regPassword" type="password" minlength="12" autocomplete="new-password" required><button class="btn" type="submit" id="registerBtn">Create account</button></form><form id="forgotForm" onsubmit="return false" class="hidden"><label for="resetEmail">Email address</label><input id="resetEmail" type="email" autocomplete="email" required><div id="resetStep2" class="hidden"><label for="resetCode">6-digit code from your email</label><input id="resetCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><label for="resetPassword">New password (12+ characters)</label><input id="resetPassword" type="password" minlength="12" autocomplete="new-password"></div><button class="btn" type="submit" id="resetBtn">Send reset code</button> <a href="#" onclick="showMode('login');return false">Back to sign in</a></form><div id="authStatus" aria-live="polite"></div></section>
-<section id="portal" class="hidden"><div class="panel"><div class="topbar"><div><h2 id="welcome">My learning</h2><p class="muted">Only active course enrolments are listed here.</p></div><button class="btn secondary" onclick="logout()">Sign out</button></div><div id="courseStatus"></div><div id="progressSummary"></div><div class="note">For privacy, paid Drive videos must remain Restricted and be shared only with your registered email by the academy. Download restrictions reduce ordinary downloads but cannot prevent all copying or screen recording.</div><div id="courses"></div></div></section>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102b52">
+<title>Learner portal - Scholar's Camp Mathematics Academy</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<style>
+:root{--navy:#102b52;--blue:#1d65c1;--gold:#f6b83f;--ink:#17263b;--muted:#66758b;--line:#e1e8f0;--bg:#f5f8fc;--red:#b42318;--green:#16845b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--navy);color:#fff;padding:18px max(18px,calc((100% - 1000px)/2))}
+header a{color:#d1ddef;font-size:.85rem}
+header h1{font-size:1.2rem;margin:6px 0 0}
+header p{margin:4px 0 0;color:#d1ddef;font-size:.9rem}
+main{max-width:1000px;margin:28px auto;padding:0 18px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px}
+.hidden{display:none!important}
+.muted{color:var(--muted);font-size:.9rem}
+label{display:block;font-weight:700;font-size:.88rem;margin:0 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #cfd9e5;border-radius:9px;font:inherit;margin-bottom:14px;background:#fff}
+.btn{border:0;border-radius:9px;padding:11px 15px;font:inherit;font-weight:750;cursor:pointer;background:var(--blue);color:#fff;text-decoration:none;display:inline-block}
+.btn.secondary{background:#eaf2ff;color:var(--navy)}
+.btn:disabled{opacity:.6;cursor:default}
+.status{padding:11px 13px;border-radius:9px;background:#edf4ff;color:var(--navy);margin:12px 0}
+.status.error{background:#fff0ef;color:var(--red)}
+.status.success{background:#eaf8f1;color:var(--green)}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.course{border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0;background:#fff}
+.course h3{margin:0 0 4px;color:var(--navy)}
+iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;margin-top:10px;background:#000}
+.note{background:#fff8e7;color:#685221;padding:12px;border-radius:9px;font-size:.88rem;margin:12px 0}
+.lesson{border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0}
+.question{padding:14px;border:1px solid var(--line);border-radius:10px;margin:10px 0}
+.question label{font-weight:500;display:flex;gap:8px;align-items:flex-start;margin:8px 0}
+.question input{width:auto;margin:4px 0}
+.progressbar{height:8px;background:#e8eef6;border-radius:99px;overflow:hidden}
+.progressbar span{display:block;height:100%;background:var(--green)}
+.progressbar span.warn{background:#d97706}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.announce{background:#eef5ff;border-left:4px solid var(--blue);padding:12px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.announce p{margin:4px 0}
+#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .big{font-size:1.8rem;font-weight:800;color:var(--navy);line-height:1.1}
+.stat small{color:var(--muted)}
+.topicrow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:10px 0}
+.topicrow .progressbar{grid-column:1/-1}
+.certbox{margin:16px 0}
+.quizmenu{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.checkrow{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.checkrow input{width:auto;margin:0}
+.checkrow label{margin:0;font-weight:500}
+.quizhead{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fff;padding:8px 0;z-index:2}
+.timer{font:700 1.2rem ui-monospace,monospace;background:#eaf2ff;color:var(--navy);padding:4px 12px;border-radius:99px}
+.timer.low{background:#fff0ef;color:var(--red)}
+.topiclist{margin:8px 0;padding-left:20px}
+.lb{padding-left:22px}
+.lb li{padding:6px 0}
+.lb li span{display:inline-block;min-width:160px}
+.lb li.you{font-weight:700;color:var(--blue)}
+.katex{font-size:1.05em}
+@media(max-width:600px){.panel{padding:16px}}
+</style>
+</head>
+<body>
+<header><a href="index.html">&larr; Back to the academy website</a><h1>Scholar's Camp Mathematics Academy</h1><p>Learner portal &middot; Your enrolled courses</p></header>
+<main>
+<section id="auth" class="panel">
+  <h2 id="authTitle">Learner sign in</h2>
+  <p class="muted">Create an account to access courses that the academy has enrolled you in after verifying payment.</p>
+  <div class="tabs"><button class="btn secondary" type="button" onclick="showMode('login')">Sign in</button><button class="btn secondary" type="button" onclick="showMode('register')">Create account</button></div>
+  <form id="loginForm" onsubmit="return false"><label for="loginEmail">Email address</label><input id="loginEmail" type="email" autocomplete="email" required><label for="loginPassword">Password</label><input id="loginPassword" type="password" minlength="12" autocomplete="current-password" required><button class="btn" type="submit" id="loginBtn">Sign in</button> <a href="#" id="forgotLink" style="margin-left:12px">Forgot password?</a></form>
+  <form id="registerForm" class="hidden" onsubmit="return false"><label for="regName">Full name</label><input id="regName" maxlength="100" autocomplete="name" required><label for="regEmail">Email address</label><input id="regEmail" type="email" autocomplete="email" required><label for="regPassword">Create password (12+ characters)</label><input id="regPassword" type="password" minlength="12" autocomplete="new-password" required><button class="btn" type="submit" id="registerBtn">Create account</button></form>
+  <form id="forgotForm" class="hidden" onsubmit="return false"><label for="resetEmail">Email address</label><input id="resetEmail" type="email" autocomplete="email" required><div id="resetStep2" class="hidden"><label for="resetCode">6-digit code from your email</label><input id="resetCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><label for="resetPassword">New password (12+ characters)</label><input id="resetPassword" type="password" minlength="12" autocomplete="new-password"></div><button class="btn" type="submit" id="resetBtn">Send reset code</button> <a href="#" onclick="showMode('login');return false">Back to sign in</a></form>
+  <div id="authStatus" aria-live="polite"></div>
+</section>
+<section id="portal" class="hidden">
+  <div class="panel">
+    <div class="topbar"><div><h2 id="welcome">My learning</h2><p class="muted">Only active course enrolments are listed here.</p></div><button class="btn secondary" type="button" onclick="logout()">Sign out</button></div>
+    <div id="announcements"></div>
+    <div id="stats"></div>
+    <div id="leaderboard"></div>
+    <div id="courseStatus" aria-live="polite"></div>
+    <div id="progressSummary"></div>
+    <div class="note">Practise maths with the timed quizzes, earn a certificate when you finish a course, and keep your daily streak going. Videos and notes are for your own study; copying or recording them is not allowed.</div>
+    <div id="courses"></div>
+  </div>
+</section>
 </main>
 <script src="config.js"></script>
 <script src="api.js"></script>
+<script src="analytics.js"></script>
 <script src="vendor/katex/katex.min.js"></script>
 <script src="vendor/katex/auto-render.min.js"></script>
 <script src="learn.js"></script>
-</body></html>
+</body>
+</html>
